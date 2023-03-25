@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.33424.131
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NesEmulator.Core", "NesEmulator.Core\NesEmulator.Core.csproj", "{82A403A1-290F-4CD6-BC65-3968CF097500}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NesEmulator.Tests", "NesEmulator.Tests\NesEmulator.Tests.csproj", "{15A5C5F6-CF22-48B5-9623-245E4F5F8109}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{82A403A1-290F-4CD6-BC65-3968CF097500}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82A403A1-290F-4CD6-BC65-3968CF097500}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82A403A1-290F-4CD6-BC65-3968CF097500}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15A5C5F6-CF22-48B5-9623-245E4F5F8109}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15A5C5F6-CF22-48B5-9623-245E4F5F8109}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15A5C5F6-CF22-48B5-9623-245E4F5F8109}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15A5C5F6-CF22-48B5-9623-245E4F5F8109}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
