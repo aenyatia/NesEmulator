@@ -62,6 +62,47 @@ public class Cpu
 		private set => _pc = value & WordMask;
 	}
 
+	public bool CarryFlag
+	{
+		get => GetFlag(Flag.Carry);
+		private set => SetFlag(Flag.Carry, value);
+	}
+	public bool ZeroFlag
+	{
+		get => GetFlag(Flag.Zero);
+		private set => SetFlag(Flag.Zero, value);
+	}
+	public bool InterruptFlag
+	{
+		get => GetFlag(Flag.Interrupt);
+		private set => SetFlag(Flag.Interrupt, value);
+	}
+	public bool DecimalFlag
+	{
+		get => GetFlag(Flag.Decimal);
+		private set => SetFlag(Flag.Decimal, value);
+	}
+	public bool BreakFlag
+	{
+		get => GetFlag(Flag.Break);
+		private set => SetFlag(Flag.Break, value);
+	}
+	public bool ReservedFlag
+	{
+		get => GetFlag(Flag.Reserved);
+		private set => SetFlag(Flag.Reserved, value);
+	}
+	public bool OverflowFlag
+	{
+		get => GetFlag(Flag.Overflow);
+		private set => SetFlag(Flag.Overflow, value);
+	}
+	public bool NegativeFlag
+	{
+		get => GetFlag(Flag.Negative);
+		private set => SetFlag(Flag.Negative, value);
+	}
+
 	public void ExecuteSingleInstruction()
 	{
 		// fetch
@@ -78,55 +119,61 @@ public class Cpu
 
 	private uint Acc()
 	{
-		return 0;
+		return 0x000;
 	}
 	private uint Abs()
 	{
-		return 0;
+		return NextWord();
 	}
 	private uint Abx()
 	{
-		return 0;
+		return NextWord() + X;
 	}
 	private uint Aby()
 	{
-		return 0;
+		return NextWord() + Y;
 	}
 	private uint Imm()
 	{
-		return 0;
+		return PC++;
 	}
 	private uint Imp()
 	{
-		return 0;
+		return 0x0000;
 	}
 	private uint Ind()
 	{
-		return 0;
+		var ptr = NextWord();
+
+		return ReadWord(ptr);
 	}
 	private uint Inx()
 	{
-		return 0;
+		var ptr = NextByte();
+
+		return ReadWord(ptr + X);
 	}
 	private uint Iny()
 	{
-		return 0;
+		var ptr = NextByte();
+
+		return ReadWord(ptr) + Y;
 	}
 	private uint Rel()
 	{
-		return 0;
+		return (uint)(PC + (int)NextByte());
 	}
 	private uint Zpg()
 	{
-		return 0;
+		return NextByte();
 	}
 	private uint Zpx()
 	{
-		return 0;
+		return NextByte() + X;
 	}
 	private uint Zpy()
 	{
-		return 0;
+		return NextByte() + Y;
 	}
 
 	private uint Unsupported() => 0x0000;
@@ -168,9 +215,27 @@ public class Cpu
 	private void Sbc(uint address) { }
 
 	// Logical Operations (3)
-	private void And(uint address) { }
-	private void Eor(uint address) { }
-	private void Ora(uint address) { }
+	private void And(uint address)
+	{
+		A &= ReadByte(address);
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
+	private void Eor(uint address)
+	{
+		A ^= ReadByte(address);
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
+	private void Ora(uint address)
+	{
+		A |= ReadByte(address);
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
 
 	// Shift & Rotate Instructions (4)
 	private void Asl(uint address) { }

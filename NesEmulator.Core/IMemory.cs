@@ -2,6 +2,6 @@
 
 public interface IMemory
 {
-	byte ReadByte(uint address);
+	uint ReadByte(uint address);
 	void WriteByte(uint address, uint value);
 }
