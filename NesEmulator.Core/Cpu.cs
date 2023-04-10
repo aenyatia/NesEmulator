@@ -204,7 +204,6 @@ public class Cpu
 		ZeroFlag = IsZero(Y);
 		NegativeFlag = IsNegative(Y);
 	}
-
 	private void Sta(uint address)
 	{
 		WriteByte(address, A);
@@ -217,7 +216,6 @@ public class Cpu
 	{
 		WriteByte(address, Y);
 	}
-
 	private void Tax(uint address)
 	{
 		X = A;
@@ -282,12 +280,50 @@ public class Cpu
 	}
 
 	// Decrements & Increments (6)
-	private void Dec(uint address) { }
-	private void Dex(uint address) { }
-	private void Dey(uint address) { }
-	private void Inc(uint address) { }
-	private void Inx(uint address) { }
-	private void Iny(uint address) { }
+	private void Dec(uint address)
+	{
+		var value = ReadByte(address) - 1;
+		WriteByte(address, value);
+
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+	}
+	private void Dex(uint address)
+	{
+		X -= 1;
+
+		ZeroFlag = IsZero(X);
+		NegativeFlag = IsNegative(X);
+	}
+	private void Dey(uint address)
+	{
+		Y -= 1;
+
+		ZeroFlag = IsZero(Y);
+		NegativeFlag = IsNegative(Y);
+	}
+	private void Inc(uint address)
+	{
+		var value = ReadByte(address) + 1;
+		WriteByte(address, value);
+
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+	}
+	private void Inx(uint address)
+	{
+		X += 1;
+
+		ZeroFlag = IsZero(X);
+		NegativeFlag = IsNegative(X);
+	}
+	private void Iny(uint address)
+	{
+		Y += 1;
+
+		ZeroFlag = IsZero(Y);
+		NegativeFlag = IsNegative(Y);
+	}
 
 	// Arithmetic Operations (2)
 	private void Adc(uint address) { }
