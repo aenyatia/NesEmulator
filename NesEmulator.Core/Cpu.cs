@@ -183,18 +183,80 @@ public class Cpu
 	#region Operations
 
 	// Transfer Instructions (12)
-	private void Lda(uint address) { }
-	private void Ldx(uint address) { }
-	private void Ldy(uint address) { }
-	private void Sta(uint address) { }
-	private void Stx(uint address) { }
-	private void Sty(uint address) { }
-	private void Tax(uint address) { }
-	private void Tay(uint address) { }
-	private void Tsx(uint address) { }
-	private void Txa(uint address) { }
-	private void Txs(uint address) { }
-	private void Tya(uint address) { }
+	private void Lda(uint address)
+	{
+		A = ReadByte(address);
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
+	private void Ldx(uint address)
+	{
+		X = ReadByte(address);
+
+		ZeroFlag = IsZero(X);
+		NegativeFlag = IsNegative(X);
+	}
+	private void Ldy(uint address)
+	{
+		Y = ReadByte(address);
+
+		ZeroFlag = IsZero(Y);
+		NegativeFlag = IsNegative(Y);
+	}
+
+	private void Sta(uint address)
+	{
+		WriteByte(address, A);
+	}
+	private void Stx(uint address)
+	{
+		WriteByte(address, X);
+	}
+	private void Sty(uint address)
+	{
+		WriteByte(address, Y);
+	}
+
+	private void Tax(uint address)
+	{
+		X = A;
+
+		ZeroFlag = IsZero(X);
+		NegativeFlag = IsNegative(X);
+	}
+	private void Tay(uint address)
+	{
+		Y = A;
+
+		ZeroFlag = IsZero(Y);
+		NegativeFlag = IsNegative(Y);
+	}
+	private void Tsx(uint address)
+	{
+		X = SP;
+
+		ZeroFlag = IsZero(X);
+		NegativeFlag = IsNegative(X);
+	}
+	private void Txa(uint address)
+	{
+		A = X;
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
+	private void Txs(uint address)
+	{
+		SP = X;
+	}
+	private void Tya(uint address)
+	{
+		A = Y;
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
 
 	// Stack Instructions (4)
 	private void Pha(uint address) { }
@@ -324,6 +386,11 @@ public class Cpu
 		if (value) SR |= (uint)flag;
 		else SR &= (uint)~flag;
 	}
+
+	private void StackPush(uint value) { }
+	private uint StackPop()
+	{
+		return 0x00; }
 
 	private static bool IsZero(uint value) => value == 0x00;
 	private static bool IsNegative(uint value) => (value & 0x80) != 0x00;
