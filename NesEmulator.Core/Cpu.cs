@@ -259,10 +259,27 @@ public class Cpu
 	}
 
 	// Stack Instructions (4)
-	private void Pha(uint address) { }
-	private void Php(uint address) { }
-	private void Pla(uint address) { }
-	private void Plp(uint address) { }
+	private void Pha(uint address)
+	{
+		StackPush(A);
+	}
+	private void Php(uint address)
+	{
+		StackPush(SR);
+	}
+	private void Pla(uint address)
+	{
+		A = StackPop();
+
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+	}
+	private void Plp(uint address)
+	{
+		SR = StackPop();
+
+		// todo plp -> update flags
+	}
 
 	// Decrements & Increments (6)
 	private void Dec(uint address) { }
@@ -390,7 +407,8 @@ public class Cpu
 	private void StackPush(uint value) { }
 	private uint StackPop()
 	{
-		return 0x00; }
+		return 0x00;
+	}
 
 	private static bool IsZero(uint value) => value == 0x00;
 	private static bool IsNegative(uint value) => (value & 0x80) != 0x00;
