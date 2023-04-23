@@ -444,14 +444,32 @@ public class Cpu
     // Comparison (3)
     private void Cmp(uint address)
     {
+        var value = ReadByte(address);
+        var cmp = A - value;
+
+        CarryFlag = A >= value;
+        ZeroFlag = IsZero(cmp);
+        NegativeFlag = IsNegative(cmp);
     }
 
     private void Cpx(uint address)
     {
+        var value = ReadByte(address);
+        var cmp = X - value;
+
+        CarryFlag = X >= value;
+        ZeroFlag = IsZero(cmp);
+        NegativeFlag = IsNegative(cmp);
     }
 
     private void Cpy(uint address)
     {
+        var value = ReadByte(address);
+        var cmp = Y - value;
+
+        CarryFlag = Y >= value;
+        ZeroFlag = IsZero(cmp);
+        NegativeFlag = IsNegative(cmp);
     }
 
     // Conditional Branch Instructions (8)
