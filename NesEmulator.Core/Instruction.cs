@@ -2,10 +2,10 @@
 
 public class Instruction
 {
-	private readonly Func<uint> _mode;
-	private readonly Action<uint> _operation;
+	private readonly Func<bool> _mode;
+	private readonly Func<bool> _operation;
 
-	public Instruction(Func<uint> mode, Action<uint> operation,
+	public Instruction(Func<bool> mode, Func<bool> operation,
 		uint opcode, string mnemonic, uint cycles)
 	{
 		_mode = mode;
@@ -20,8 +20,10 @@ public class Instruction
 	public string Mnemonic { get; }
 	public uint Cycles { get; }
 
-	public void Execute()
+	public uint Execute()
 	{
-		_operation(_mode());
+		return _mode() && _operation()
+			? Cycles + 1
+			: Cycles;
 	}
 }
