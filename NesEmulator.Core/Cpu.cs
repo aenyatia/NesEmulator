@@ -454,11 +454,33 @@ public sealed class Cpu
 	// Arithmetic Operations (2)
 	private bool Adc()
 	{
+		var memory = ReadByte(_address);
+		var result = A + memory + (CarryFlag ? 1U : 0U);
+
+		OverflowFlag = ((~(A ^ memory) & (A ^ result)) & 0x0080) != 0x00;
+
+		A = result;
+
+		CarryFlag = HiByte(result) != 0x00;
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+
 		return true;
 	}
 
 	private bool Sbc()
 	{
+		var memory = ReadByte(_address);
+		var result = A - memory - (CarryFlag ? 1U : 0U);
+
+		OverflowFlag = ((~(A ^ memory) & (A ^ result)) & 0x0080) != 0x00;
+
+		A = result;
+
+		CarryFlag = HiByte(result) != 0x00;
+		ZeroFlag = IsZero(A);
+		NegativeFlag = IsNegative(A);
+
 		return true;
 	}
 
