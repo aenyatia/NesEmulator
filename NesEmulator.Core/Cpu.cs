@@ -518,21 +518,123 @@ public sealed class Cpu
 	// Shift & Rotate Instructions (4)
 	private bool Asl()
 	{
+		var value = ReadByte(_address);
+
+		value <<= 1;
+
+		CarryFlag = (value & 0xFF00) != 0x00;
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		WriteByte(_address, value);
+
+		return false;
+	}
+
+	private bool AslA()
+	{
+		var value = A;
+
+		value <<= 1;
+
+		CarryFlag = (value & 0xFF00) != 0x00;
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		A = value;
+
 		return false;
 	}
 
 	private bool Lsr()
 	{
+		var value = ReadByte(_address);
+
+		CarryFlag = (value & 0x0001) != 0x0000;
+
+		value >>= 1;
+
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		WriteByte(_address, value);
+
+		return false;
+	}
+
+	private bool LsrA()
+	{
+		var value = A;
+
+		CarryFlag = (value & 0x0001) != 0x0000;
+
+		value >>= 1;
+
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		A = value;
+
 		return false;
 	}
 
 	private bool Rol()
 	{
+		var value = ReadByte(_address);
+
+		value = (value << 1) | (CarryFlag ? 1U : 0U);
+
+		CarryFlag = (value & 0xFF00) != 0x0000;
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		WriteByte(_address, value);
+
+		return false;
+	}
+
+	private bool RolA()
+	{
+		var value = A;
+
+		value = (value << 1) | (CarryFlag ? 1U : 0U);
+
+		CarryFlag = (value & 0xFF00) != 0x0000;
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		A = value;
+
 		return false;
 	}
 
 	private bool Ror()
 	{
+		var value = ReadByte(_address);
+
+		var result = (value >> 1) | (CarryFlag ? 1U : 0U) << 7;
+
+		CarryFlag = (value & 0x0001) != 0x0000;
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		WriteByte(_address, result);
+
+		return false;
+	}
+
+	private bool RorA()
+	{
+		var value = A;
+
+		var result = (value >> 1) | (CarryFlag ? 1U : 0U) << 7;
+
+		CarryFlag = (value & 0x0001) != 0x0000;
+		ZeroFlag = IsZero(value);
+		NegativeFlag = IsNegative(value);
+
+		A = result;
+
 		return false;
 	}
 
@@ -783,7 +885,7 @@ public sealed class Cpu
 		_instructions[0x07] = new Instruction(Unsupported, Unsupported, 0x07, "unsupported", 0);
 		_instructions[0x08] = new Instruction(ImpMode, Php, 0x08, "PHP oper", 1);
 		_instructions[0x09] = new Instruction(ImmMode, Ora, 0x09, "ORA oper", 1);
-		_instructions[0x0A] = new Instruction(AccMode, Asl, 0x0A, "ASL oper", 1);
+		_instructions[0x0A] = new Instruction(AccMode, AslA, 0x0A, "ASL oper", 1);
 		_instructions[0x0B] = new Instruction(Unsupported, Unsupported, 0x0B, "unsupported", 0);
 		_instructions[0x0C] = new Instruction(Unsupported, Unsupported, 0x0C, "unsupported", 0);
 		_instructions[0x0D] = new Instruction(AbsMode, Ora, 0x0D, "ORA oper", 1);
@@ -819,7 +921,7 @@ public sealed class Cpu
 		_instructions[0x27] = new Instruction(Unsupported, Unsupported, 0x27, "Unsupported", 0);
 		_instructions[0x28] = new Instruction(ImpMode, Plp, 0x28, "PLP oper", 1);
 		_instructions[0x29] = new Instruction(ImmMode, And, 0x29, "AND oper", 1);
-		_instructions[0x2A] = new Instruction(AccMode, Rol, 0x2A, "ROL oper", 1);
+		_instructions[0x2A] = new Instruction(AccMode, RolA, 0x2A, "ROL oper", 1);
 		_instructions[0x2B] = new Instruction(Unsupported, Unsupported, 0x2B, "Unsupported", 0);
 		_instructions[0x2C] = new Instruction(AbsMode, Bit, 0x2C, "BIT oper", 1);
 		_instructions[0x2D] = new Instruction(AbsMode, And, 0x2D, "AND oper", 1);
@@ -855,7 +957,7 @@ public sealed class Cpu
 		_instructions[0x47] = new Instruction(Unsupported, Unsupported, 0x47, "Unsupported", 0);
 		_instructions[0x48] = new Instruction(ImpMode, Pha, 0x48, "PHA oper", 1);
 		_instructions[0x49] = new Instruction(ImmMode, Eor, 0x49, "EOR oper", 1);
-		_instructions[0x4A] = new Instruction(AccMode, Lsr, 0x4A, "LSR oper", 1);
+		_instructions[0x4A] = new Instruction(AccMode, LsrA, 0x4A, "LSR oper", 1);
 		_instructions[0x4B] = new Instruction(Unsupported, Unsupported, 0x4B, "Unsupported", 0);
 		_instructions[0x4C] = new Instruction(AbsMode, Jmp, 0x4C, "JMP oper", 1);
 		_instructions[0x4D] = new Instruction(AbsMode, Eor, 0x4D, "EOR oper", 1);
@@ -891,7 +993,7 @@ public sealed class Cpu
 		_instructions[0x67] = new Instruction(Unsupported, Unsupported, 0x67, "Unsupported", 0);
 		_instructions[0x68] = new Instruction(ImpMode, Pla, 0x68, "PLA oper", 1);
 		_instructions[0x69] = new Instruction(ImmMode, Adc, 0x69, "ADC oper", 1);
-		_instructions[0x6A] = new Instruction(AccMode, Ror, 0x6A, "ROR oper", 1);
+		_instructions[0x6A] = new Instruction(AccMode, RorA, 0x6A, "ROR oper", 1);
 		_instructions[0x6B] = new Instruction(Unsupported, Unsupported, 0x6B, "Unsupported", 0);
 		_instructions[0x6C] = new Instruction(IndMode, Jmp, 0x6C, "JMP oper", 1);
 		_instructions[0x6D] = new Instruction(AbsMode, Adc, 0x6D, "ADC oper", 1);
