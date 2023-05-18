@@ -7,7 +7,7 @@ public sealed class Cpu
 
 	private const ushort IrqVectorL = 0xFFFE;
 	private const ushort IrqVectorH = 0xFFFF;
-	
+
 	private readonly Instruction[] _instructions = new Instruction[256];
 	private readonly IMemory _memory;
 
@@ -861,16 +861,31 @@ public sealed class Cpu
 	// Jumps & Subroutines (3)
 	private bool Jmp()
 	{
+		PC = _address;
+
 		return false;
 	}
 
 	private bool Jsr()
 	{
+		PC--;
+
+		StackPush(HiByte(PC));
+		StackPush(LoByte(PC));
+
+		PC = _address;
+
 		return false;
 	}
 
 	private bool Rts()
 	{
+		var low = StackPop();
+		var high = StackPop();
+
+		PC = (high << 8) | low;
+		PC++;
+
 		return false;
 	}
 
@@ -989,8 +1004,8 @@ public sealed class Cpu
 	private static bool IsZero(uint value) => value == 0x00;
 	private static bool IsNegative(uint value) => (value & 0x80) != 0x00;
 	private static bool IsPageCrossed(uint left, uint right) => false;
-	private static ushort HiByte(uint value) => 0x00;
-	private static ushort LoByte(uint value) => 0x00;
+	private static uint HiByte(uint value) => 0x00;
+	private static uint LoByte(uint value) => 0x00;
 
 	#endregion
 
