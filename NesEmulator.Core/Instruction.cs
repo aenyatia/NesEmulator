@@ -22,7 +22,10 @@ public class Instruction
 
 	public uint Execute()
 	{
-		return _mode() && _operation()
+		var modeCross = _mode();
+		var opCross = _operation();
+
+		return modeCross && opCross
 			? Cycles + 1
 			: Cycles;
 	}
