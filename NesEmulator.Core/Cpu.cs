@@ -5,6 +5,9 @@ public sealed class Cpu
 	private const uint ByteMask = 0x0000_00FF;
 	private const uint WordMask = 0x0000_FFFF;
 
+	private const ushort IrqVectorL = 0xFFFE;
+	private const ushort IrqVectorH = 0xFFFF;
+	
 	private readonly Instruction[] _instructions = new Instruction[256];
 	private readonly IMemory _memory;
 
@@ -874,29 +877,59 @@ public sealed class Cpu
 	// Interrupts (2)
 	private bool Brk()
 	{
+		PC++;
+
+		StackPush(HiByte(PC));
+		StackPush(LoByte(PC));
+
+		StackPush(SR);
+
+		var low = ReadByte(IrqVectorL);
+		var high = ReadByte(IrqVectorH);
+
+		PC = (high << 8) | low;
+
+		InterruptFlag = true;
+
 		return false;
 	}
 
 	private bool Rti()
 	{
+		var value = StackPop();
+
+		CarryFlag = (value & 0x01) != 0x0;
+		ZeroFlag = (value & 0x02) != 0x0;
+		InterruptFlag = (value & 0x04) != 0x0;
+		DecimalFlag = (value & 0x08) != 0x0;
+		OverflowFlag = (value & 0x40) != 0x0;
+		NegativeFlag = (value & 0x80) != 0x0;
+
+		var low = StackPop();
+		var high = StackPop();
+
+		PC = (high << 8) | low;
+
 		return false;
 	}
 
 	// Other (2)
 	private bool Bit()
 	{
+		var value = ReadByte(_address);
+
+		var result = A & value;
+
+		ZeroFlag = IsZero(result);
+		OverflowFlag = (value & 0x40) != 0x00;
+		NegativeFlag = (value & 0x80) != 0x00;
+
 		return false;
 	}
 
-	private bool Nop()
-	{
-		return false;
-	}
+	private static bool Nop() => false;
 
-	private bool Unsupported()
-	{
-		return false;
-	}
+	private static bool Unsupported() => false;
 
 	#endregion
 
