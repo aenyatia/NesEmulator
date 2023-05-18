@@ -17,6 +17,7 @@ public sealed class Cpu
 
 	private uint _cycles;
 	private uint _address;
+	private int _relAddress;
 
 	public Cpu(IMemory memory,
 		uint a = 0x00, uint x = 0x00, uint y = 0x00,
@@ -217,7 +218,7 @@ public sealed class Cpu
 
 	private bool RelMode()
 	{
-		_address = (uint)(PC + (int)NextByte());
+		_relAddress = (int)NextByte();
 
 		return false;
 	}
@@ -728,41 +729,129 @@ public sealed class Cpu
 	// Conditional Branch Instructions (8)
 	private bool Bcc()
 	{
+		if (CarryFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Bcs()
 	{
+		if (!CarryFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Beq()
 	{
+		if (!ZeroFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Bmi()
 	{
+		if (!NegativeFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Bne()
 	{
+		if (ZeroFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Bpl()
 	{
+		if (NegativeFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Bvc()
 	{
+		if (OverflowFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
 	private bool Bvs()
 	{
+		if (!OverflowFlag) return false;
+
+		_cycles++;
+
+		var newAddress = (uint)(PC + _relAddress);
+
+		if (HiByte(PC) != HiByte(newAddress))
+			_cycles++;
+
+		PC = newAddress;
+
 		return false;
 	}
 
