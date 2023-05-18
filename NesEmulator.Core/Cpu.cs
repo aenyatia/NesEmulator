@@ -5,8 +5,14 @@ public sealed class Cpu
 	private const uint ByteMask = 0x0000_00FF;
 	private const uint WordMask = 0x0000_FFFF;
 
-	private const ushort IrqVectorL = 0xFFFE;
-	private const ushort IrqVectorH = 0xFFFF;
+	private const uint NmiVectorL = 0xFFFA;
+	private const uint NmiVectorH = 0xFFFB;
+	private const uint RstVectorL = 0xFFFC;
+	private const uint RstVectorH = 0xFFFD;
+	private const uint IrqVectorL = 0xFFFE;
+	private const uint IrqVectorH = 0xFFFF;
+	private const uint StackTop = 0xFF;
+	private const uint StackBot = 0x00;
 
 	private readonly Instruction[] _instructions = new Instruction[256];
 	private readonly IMemory _memory;
@@ -121,6 +127,69 @@ public sealed class Cpu
 	{
 		get => GetFlag(Flag.Negative);
 		private set => SetFlag(Flag.Negative, value);
+	}
+
+	public void Reset()
+	{
+		var lowByte = ReadByte(RstVectorL);
+		var highByte = ReadByte(RstVectorH);
+
+		PC = (highByte << 8) | lowByte;
+
+		A = 0x00;
+		X = 0x00;
+		Y = 0x00;
+
+		SP = 0xFD;
+		SR = 0x00;
+
+		_address = 0x0000;
+		_relAddress = 0x00;
+
+		_cycles = 8;
+	}
+
+	public void Irq()
+	{
+		if (!InterruptFlag) return;
+
+		StackPush(HiByte(PC));
+		StackPush(LoByte(PC));
+
+		BreakFlag = false;
+		ReservedFlag = true;
+		InterruptFlag = true;
+
+		StackPush(SR);
+
+		//var lowByte = ReadByte(IrqVectorL);
+		//var highByte = ReadByte(IrqVectorH);
+
+		const byte lowByte = 0x00;
+		const byte highByte = 0xC0;
+
+		PC = (highByte << 8) | lowByte;
+
+		_cycles = 7;
+	}
+
+	public void Nmi()
+	{
+		StackPush(HiByte(PC));
+		StackPush(LoByte(PC));
+
+		BreakFlag = false;
+		ReservedFlag = true;
+		InterruptFlag = true;
+
+		StackPush(SR);
+
+		var lowByte = ReadByte(NmiVectorL);
+		var highByte = ReadByte(NmiVectorH);
+
+		PC = (highByte << 8) | lowByte;
+
+		_cycles = 8;
 	}
 
 	public void ExecuteSingleInstruction()
@@ -994,18 +1063,24 @@ public sealed class Cpu
 
 	private void StackPush(uint value)
 	{
+		WriteByte(0x0100 + SP, value);
+		if (SP == StackBot) SP = StackTop;
+		else SP--;
 	}
 
 	private uint StackPop()
 	{
-		return 0x00;
+		if (SP == StackTop) SP = StackBot;
+		else SP++;
+
+		return ReadByte(0x0100 + SP);
 	}
 
 	private static bool IsZero(uint value) => value == 0x00;
 	private static bool IsNegative(uint value) => (value & 0x80) != 0x00;
-	private static bool IsPageCrossed(uint left, uint right) => false;
-	private static uint HiByte(uint value) => 0x00;
-	private static uint LoByte(uint value) => 0x00;
+	private static bool IsPageCrossed(uint left, uint right) => HiByte(left) != HiByte(right);
+	private static uint HiByte(uint value) => (value >> 8) & 0x00FF;
+	private static uint LoByte(uint value) => value & 0x00FF;
 
 	#endregion
 
