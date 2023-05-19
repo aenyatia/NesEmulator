@@ -5,16 +5,11 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <LangVersion>11</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\NesEmulator.Core\NesEmulator.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Update="nestest.nes">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+        <ProjectReference Include="..\NesEmulator.Core\NesEmulator.Core.csproj" />
     </ItemGroup>
 
 </Project>
