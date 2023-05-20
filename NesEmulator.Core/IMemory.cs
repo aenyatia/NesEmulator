@@ -1,7 +1,15 @@
 ﻿namespace NesEmulator.Core;
 
-public interface IMemory
+public interface IReadable
 {
-	uint ReadByte(uint address);
-	void WriteByte(uint address, uint value);
+	uint Read(uint address);
+}
+
+public interface IWritable
+{
+	void Write(uint address, uint data);
+}
+
+public interface IMemory : IReadable, IWritable
+{
 }

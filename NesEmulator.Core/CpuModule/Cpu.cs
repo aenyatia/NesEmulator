@@ -1,4 +1,4 @@
-﻿namespace NesEmulator.Core;
+﻿namespace NesEmulator.Core.CpuModule;
 
 public sealed class Cpu
 {
@@ -15,7 +15,7 @@ public sealed class Cpu
 	private const uint StackBot = 0x00;
 
 	private readonly Instruction[] _instructions = new Instruction[256];
-	private readonly IMemory _memory;
+	private readonly Bus _bus;
 
 	private uint _a;
 	private uint _x;
@@ -30,13 +30,13 @@ public sealed class Cpu
 
 	public uint Cycles { get; private set; }
 
-	public Cpu(IMemory memory,
+	public Cpu(Bus bus,
 		uint a = 0x00, uint x = 0x00, uint y = 0x00,
 		uint sr = 0x00, uint sp = 0x00, uint pc = 0x0000)
 	{
 		CreateInstructions();
 
-		_memory = memory;
+		_bus = bus;
 
 		A = a;
 		X = x;
@@ -1125,12 +1125,12 @@ public sealed class Cpu
 
 	private void WriteByte(uint address, uint value)
 	{
-		_memory.WriteByte(address, value);
+		_bus.CpuMemory.Write(address, value);
 	}
 
 	private uint ReadByte(uint address)
 	{
-		return _memory.ReadByte(address);
+		return _bus.CpuMemory.Read(address);
 	}
 
 	private uint ReadWord(uint address)
@@ -1143,7 +1143,7 @@ public sealed class Cpu
 
 	private uint NextByte()
 	{
-		return _memory.ReadByte(PC++);
+		return _bus.CpuMemory.Read(PC++);
 	}
 
 	private uint NextWord()

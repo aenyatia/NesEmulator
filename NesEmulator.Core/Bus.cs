@@ -1,63 +1,34 @@
-﻿namespace NesEmulator.Core;
+﻿using NesEmulator.Core.CartridgeModule;
+using NesEmulator.Core.ControllerModule;
+using NesEmulator.Core.CpuModule;
+using NesEmulator.Core.PpuModule;
+
+namespace NesEmulator.Core;
 
 public class Bus
 {
-	private readonly byte[] _cpuRam;
-
-	private readonly Cpu _cpu;
-	private readonly Ppu _ppu;
-	private Cartridge? _cartridge;
-
-	private uint _systemClockCounter;
+	public Cpu Cpu { get; }
+	public CpuMemory CpuMemory { get; }
+	public Ppu Ppu { get; }
+	public Controller Controller { get; }
+	public Cartridge? Cartridge { get; private set; }
 
 	public Bus()
 	{
-		_cpuRam = new byte[2048];
-		_cpu = new Cpu(new Memory());
-		_ppu = new Ppu();
-	}
-
-	public void CpuWrite(uint address, uint data)
-	{
-		if (_cartridge != null && _cartridge.CpuWrite(address, data)) // not needed
-		{
-		}
-		else if (address <= 0x1FFF)
-			_cpuRam[address & 0x07FF] = (byte)data;
-
-		else if (address is >= 0x2000 and <= 0x3FFF)
-			_ppu.CpuWrite(address & 0x0007, data);
-	}
-
-	public uint CpuRead(uint address, bool readOnly)
-	{
-		var data = 0x00U;
-
-		if (_cartridge != null && _cartridge.CpuRead(address, out data)) // not needed
-		{
-		}
-		else if (address <= 0x1FFF)
-			data = _cpuRam[address];
-
-		else if (address is >= 0x2000 and <= 0x3FFF)
-			_ppu.CpuRead(address & 0x0007, readOnly);
-
-		return data;
+		Cpu = new Cpu(this);
+		CpuMemory = new CpuMemory(this);
+		Ppu = new Ppu(this);
+		Controller = new Controller();
 	}
 
 	public void InsertCartridge(Cartridge cartridge)
 	{
-		_cartridge = cartridge;
-		_ppu.ConnectCartridge(cartridge);
+		Cartridge = cartridge;
 	}
 
-	public void Reset()
+	public void Start()
 	{
-		_cpu.Reset();
-		_systemClockCounter = 0;
-	}
-
-	public void Clock()
-	{
+		if (Cartridge is null)
+			throw new NullReferenceException();
 	}
 }

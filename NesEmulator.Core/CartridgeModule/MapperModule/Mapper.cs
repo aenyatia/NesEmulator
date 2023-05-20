@@ -1,11 +1,11 @@
-﻿namespace NesEmulator.Core;
+﻿namespace NesEmulator.Core.CartridgeModule.MapperModule;
 
 public abstract class Mapper
 {
-	protected readonly uint PrgBanks;
-	protected readonly uint ChrBanks;
+	protected readonly int PrgBanks;
+	protected readonly int ChrBanks;
 
-	protected Mapper(uint prgBanks, uint chrBanks)
+	protected Mapper(int prgBanks, int chrBanks)
 	{
 		PrgBanks = prgBanks;
 		ChrBanks = chrBanks;

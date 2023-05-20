@@ -1,4 +1,4 @@
-﻿namespace NesEmulator.Core;
+﻿namespace NesEmulator.Core.CpuModule;
 
 public class Instruction
 {

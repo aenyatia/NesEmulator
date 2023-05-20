@@ -1,20 +1,31 @@
-﻿namespace NesEmulator.Core;
+﻿namespace NesEmulator.Core.PpuModule;
 
 public class Ppu
 {
-	private Cartridge? _cartridge;
-
+	private readonly PpuMemory _ppuMemory;
+	
 	private readonly uint[,] _tblName;
 	private readonly uint[] _tblPalette;
 	private readonly uint[,] _tblPattern;
 
-	public Ppu()
+	public Ppu(Bus bus)
 	{
+		_ppuMemory = new PpuMemory(bus);
+		
 		_tblName = new uint[2, 1024];
 		_tblPalette = new uint[32];
 		_tblPattern = new uint[2, 4096]; // future
 	}
 
+	public uint Read(uint address)
+	{
+		return 0;
+	}
+
+	public void Write(uint address, uint data)
+	{
+	}
+	
 	public void CpuWrite(uint address, uint data)
 	{
 		switch (address)
@@ -68,10 +79,6 @@ public class Ppu
 	public void PpuWrite(uint address, uint data)
 	{
 		address &= 0x3FFF;
-
-		if (_cartridge.PpuWrite(address, data))
-		{
-		}
 	}
 
 	public uint PpuRead(uint address, bool readOnly)
@@ -80,19 +87,6 @@ public class Ppu
 
 		address &= 0x3FFF;
 
-		if (_cartridge.PpuRead(address, out data))
-		{
-		}
-
 		return data;
-	}
-
-	public void ConnectCartridge(Cartridge cartridge)
-	{
-		_cartridge = cartridge;
-	}
-
-	public void Clock()
-	{
 	}
 }

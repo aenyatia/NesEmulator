@@ -1,8 +1,8 @@
-﻿namespace NesEmulator.Core;
+﻿namespace NesEmulator.Core.CartridgeModule.MapperModule.Mappers;
 
 public class Mapper000 : Mapper
 {
-	public Mapper000(uint prgBanks, uint chrBanks) : base(prgBanks, chrBanks)
+	public Mapper000(int prgBanks, int chrBanks) : base(prgBanks, chrBanks)
 	{
 	}
 
