@@ -10,14 +10,14 @@ public class Cartridge
 	private readonly Mapper _mapper;
 	private readonly byte[] _prgRom;
 	private readonly byte[] _chrRom;
-	private readonly byte[] _prgRam;
+
+	public byte[] ChrRom => _chrRom;
 
 	private Cartridge(Mapper mapper, byte[] prgRom, byte[] chrRom)
 	{
 		_mapper = mapper;
 		_prgRom = prgRom;
 		_chrRom = chrRom;
-		_prgRam = new byte[8 * 1024];
 	}
 
 	public static Cartridge Create(string path)
@@ -89,6 +89,11 @@ public class Cartridge
 			_ => throw new ArgumentOutOfRangeException(nameof(header))
 		};
 	}
+	
+	// read_prg
+	// read_chr
+	// write_prg
+	// write_chr
 
 	public uint Read(uint address)
 	{
