@@ -5,15 +5,16 @@ using NesEmulator.Core.PpuModule;
 
 namespace NesEmulator.Core;
 
-public class Bus
+public class Nes
 {
 	public Cpu Cpu { get; }
 	public CpuMemory CpuMemory { get; }
 	public Ppu Ppu { get; }
 	public Controller Controller { get; }
 	public Cartridge? Cartridge { get; private set; }
+	public bool IsRunning { get; set; }
 
-	public Bus()
+	public Nes()
 	{
 		Cpu = new Cpu(this);
 		CpuMemory = new CpuMemory(this);
@@ -21,7 +22,7 @@ public class Bus
 		Controller = new Controller();
 	}
 
-	public void InsertCartridge(Cartridge cartridge)
+	public void LoadCartridge(Cartridge cartridge)
 	{
 		Cartridge = cartridge;
 	}
@@ -30,5 +31,16 @@ public class Bus
 	{
 		if (Cartridge is null)
 			throw new NullReferenceException();
+
+		while (IsRunning)
+		{
+			var cycles = Cpu.ExecuteSingleInstruction();
+
+			// 1 cpu cycle = 3 ppu cycle
+			for (var i = 0; i < cycles * 3; i++)
+			{
+				Ppu.Clock();
+			}
+		}
 	}
 }

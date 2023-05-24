@@ -15,7 +15,7 @@ public sealed class Cpu
 	private const uint StackBot = 0x00;
 
 	private readonly Instruction[] _instructions = new Instruction[256];
-	private readonly Bus _bus;
+	private readonly Nes _nes;
 
 	private uint _a;
 	private uint _x;
@@ -30,13 +30,13 @@ public sealed class Cpu
 
 	public uint Cycles { get; private set; }
 
-	public Cpu(Bus bus,
+	public Cpu(Nes nes,
 		uint a = 0x00, uint x = 0x00, uint y = 0x00,
 		uint sr = 0x00, uint sp = 0x00, uint pc = 0x0000)
 	{
 		CreateInstructions();
 
-		_bus = bus;
+		_nes = nes;
 
 		A = a;
 		X = x;
@@ -197,7 +197,7 @@ public sealed class Cpu
 		Cycles += 8;
 	}
 
-	public void ExecuteSingleInstruction()
+	public uint ExecuteSingleInstruction()
 	{
 		// fetch
 		var opcode = NextByte();
@@ -211,6 +211,8 @@ public sealed class Cpu
 		_cycles += x;
 
 		Cycles += _cycles;
+
+		return _cycles;
 	}
 
 	#region Modes
@@ -1125,12 +1127,12 @@ public sealed class Cpu
 
 	private void WriteByte(uint address, uint value)
 	{
-		_bus.CpuMemory.Write(address, value);
+		_nes.CpuMemory.Write(address, value);
 	}
 
 	private uint ReadByte(uint address)
 	{
-		return _bus.CpuMemory.Read(address);
+		return _nes.CpuMemory.Read(address);
 	}
 
 	private uint ReadWord(uint address)
@@ -1143,7 +1145,7 @@ public sealed class Cpu
 
 	private uint NextByte()
 	{
-		return _bus.CpuMemory.Read(PC++);
+		return _nes.CpuMemory.Read(PC++);
 	}
 
 	private uint NextWord()

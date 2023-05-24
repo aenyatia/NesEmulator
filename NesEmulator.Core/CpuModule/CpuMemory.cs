@@ -3,9 +3,9 @@
 public class CpuMemory : IMemory
 {
 	private readonly uint[] _ram = new uint[2048];
-	private readonly Bus _bus;
+	private readonly Nes _nes;
 
-	public CpuMemory(Bus bus) => _bus = bus;
+	public CpuMemory(Nes nes) => _nes = nes;
 
 	public uint Read(uint address)
 	{
@@ -48,24 +48,24 @@ public class CpuMemory : IMemory
 	{
 		// todo calculate address (mirrors)
 
-		return _ram[address];
+		return _ram[address % 0x0800];
 	}
 
 	private uint ReadFromPpu(uint address)
 	{
 		// todo calculate address (mirrors)
 
-		return _bus.Ppu.Read(address);
+		return _nes.Ppu.Read(address);
 	}
 
 	private uint ReadFromApu(uint address)
 	{
-		return _bus.Controller.Read(address);
+		return _nes.Controller.Read(address);
 	}
 
 	private uint ReadFromCartridge(uint address)
 	{
-		return _bus.Cartridge?.Read(address) ?? throw new NullReferenceException(nameof(_bus.Cartridge));
+		return _nes.Cartridge?.ReadPrgRom((ushort)address) ?? throw new NullReferenceException(nameof(_nes.Cartridge));
 	}
 
 	private static uint ReadFromUnusedMemory()
@@ -78,27 +78,27 @@ public class CpuMemory : IMemory
 	{
 		// todo calculate address (mirrors)
 
-		_ram[address] = data;
+		_ram[address % 0x0800] = data;
 	}
 
 	private void WriteToPpu(uint address, uint data)
 	{
 		// todo calculate address (mirrors)
 
-		_bus.Ppu.Write(address, data);
+		_nes.Ppu.Write(address, data);
 	}
 
 	private void WriteToApu(uint address, uint data)
 	{
-		_bus.Controller.Write(address, data);
+		_nes.Controller.Write(address, data);
 	}
 
 	private void WriteToCartridge(uint address, uint data)
 	{
-		if (_bus.Cartridge is null)
-			throw new NullReferenceException(nameof(_bus.Cartridge));
+		if (_nes.Cartridge is null)
+			throw new NullReferenceException(nameof(_nes.Cartridge));
 
-		_bus.Cartridge.Write(address, data);
+		_nes.Cartridge.WritePrgRam((ushort)address, (byte)data);
 	}
 
 	private static void WriteToUnusedMemory()
