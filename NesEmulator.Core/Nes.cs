@@ -13,10 +13,10 @@ public class Nes
 	public Controller Controller { get; }
 	public Cartridge? Cartridge { get; private set; }
 
-	
+
 	public bool IsRunning { get; set; }
 	public int SystemClock { get; set; }
-	
+
 
 	public Nes()
 	{
@@ -37,25 +37,22 @@ public class Nes
 		SystemClock = 0;
 	}
 
-	public void Start()
+	public void Clock()
 	{
 		if (Cartridge is null)
 			throw new NullReferenceException();
 
-		while (IsRunning)
+		Ppu.Clock();
+
+		if (SystemClock % 3 == 0)
+			Cpu.Clock();
+
+		if (Ppu.Nmi)
 		{
-			Ppu.Clock();
-
-			if (SystemClock % 3 == 0)
-				Cpu.Clock();
-
-			if (Ppu.Nmi)
-			{
-				Ppu.Nmi = false;
-				Cpu.Nmi();
-			}
-
-			SystemClock++;
+			Ppu.Nmi = false;
+			Cpu.Nmi();
 		}
+
+		SystemClock++;
 	}
 }

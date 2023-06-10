@@ -8,8 +8,8 @@ public class Ppu
 
 	private readonly ControlRegister _controlRegister = new();
 	private readonly MaskRegister _maskRegister = new();
-	private readonly StatusRegister _statusRegister  = new();
-	
+	private readonly StatusRegister _statusRegister = new();
+
 	// data register
 	private byte _ppuDataBuffer;
 
@@ -17,27 +17,27 @@ public class Ppu
 	private bool FrameComplete { get; set; }
 	private int Scanline { get; set; }
 	private int Cycle { get; set; }
-	
+
 	// Background rendering
-	private byte _bgNextTileId     = 0x00;
+	private byte _bgNextTileId = 0x00;
 	private byte _bgNextTileAttrib = 0x00;
-	private byte _bgNextTileLsb    = 0x00;
-	private byte _bgNextTileMsb    = 0x00;
-	
+	private byte _bgNextTileLsb = 0x00;
+	private byte _bgNextTileMsb = 0x00;
+
 	private ushort _bgShifterPatternLo = 0x0000;
 	private ushort _bgShifterPatternHi = 0x0000;
-	private ushort _bgShifterAttribLo  = 0x0000;
-	private ushort _bgShifterAttribHi  = 0x0000;
-	
+	private ushort _bgShifterAttribLo = 0x0000;
+	private ushort _bgShifterAttribHi = 0x0000;
+
 	// scroll registers
 	private LoopyRegister _vRamAddress = new();
 	private LoopyRegister _tRamAddress = new();
 	private byte _addressLatch; // x
 	private byte _fineX; // w
-	
+
 	public bool Nmi { get; set; }
 	public byte[,] Screen { get; set; } = new byte[240, 256];
-	
+
 	// ctor
 	public Ppu(Nes nes) => _ppuMemory = new PpuMemory(nes);
 
@@ -54,7 +54,7 @@ public class Ppu
 				break;
 			case 0x0002: // status
 				data = (byte)((_statusRegister.Value & 0xE0) | (_ppuDataBuffer & 0x1F));
-				
+
 				_statusRegister.VerticalBlanc = false;
 				_addressLatch = 0;
 				break;
@@ -113,6 +113,7 @@ public class Ppu
 					_tRamAddress.CoarseY = (byte)(data >> 3);
 					_addressLatch = 0;
 				}
+
 				break;
 			case 0x0006: // ppu address
 				if (_addressLatch == 0)
@@ -122,11 +123,11 @@ public class Ppu
 				}
 				else
 				{
-					
 					_tRamAddress.Value = (byte)((uint)(_tRamAddress.Value & 0xFF00) | data);
 					_vRamAddress.Value = _tRamAddress.Value;
 					_addressLatch = 0;
 				}
+
 				break;
 			case 0x0007: // ppu data
 				Write(_vRamAddress.Value, data);
@@ -134,21 +135,23 @@ public class Ppu
 				break;
 		}
 	}
-	
+
 	public void Clock()
 	{
 		// Trigger an NMI at the start of _scanline 241 if VBLANK NMI's are enabled
 		if (Scanline == 241 && Cycle == 1)
 		{
 			_statusRegister.VerticalBlanc = true;
-			
+
 			if (_controlRegister.EnableNmi)
 				Nmi = true;
 		}
-		
-		// set screen
-		Screen[Cycle - 1, Scanline] = (byte)(Random.Shared.Next() % 2 == 0 ? 0x3F : 0x1A);
 
+		// set screen
+		for (var i = 0; i < 240; i++)
+		for (var j = 0; j < 256; j++)
+			Screen[i, j] = (byte)(Random.Shared.Next() % 2 == 0 ? 0x3F : 0x1A);
+		
 		Cycle++;
 		if (Cycle >= 341)
 		{

@@ -228,6 +228,8 @@ public sealed class Cpu
 			_cycles += x;
 
 			Cycles += _cycles;
+
+			Console.WriteLine($"A: {A:X2} X: {X:X2} Y:{Y:21}");
 		}
 
 		_cycles--;
@@ -313,7 +315,6 @@ public sealed class Cpu
 	private bool InyMode()
 	{
 		var ptr = NextByte();
-		var word = ReadWord(ptr);
 
 		var lo = ReadByte(ptr);
 		var hi = ReadByte((ptr + 1) % 256);

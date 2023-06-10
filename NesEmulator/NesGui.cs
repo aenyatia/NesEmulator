@@ -8,10 +8,9 @@ namespace NesEmulator;
 
 public class NesGui
 {
-	private const uint Width = 256;
-	private const uint Height = 240;
+	private const uint Width = 256; // columns
+	private const uint Height = 240; // rows
 	private const string Title = "Nes Emulator";
-	private const bool FullScreen = false;
 
 	private RenderWindow Window { get; }
 	private Nes Nes { get; }
@@ -19,18 +18,15 @@ public class NesGui
 
 	public NesGui()
 	{
-		Window = new RenderWindow(new VideoMode(Width, Height), Title, FullScreen ? Styles.Fullscreen : Styles.Default);
+		Window = new RenderWindow(new VideoMode(Width, Height), Title);
 		Window.Closed += (_, _) => Window.Close();
 		Window.SetFramerateLimit(120);
 
-		if (!FullScreen)
-		{
-			var view = Window.GetView();
-			view.Rotation = 90;
-			view.Size = new Vector2f(Width, -Height);
-			Window.SetView(view);
-			Window.Size = new Vector2u(800, 800);
-		}
+		var view = Window.GetView();
+		view.Rotation = 90;
+		view.Size = new Vector2f(Width, -Height);
+		Window.SetView(view);
+		Window.Size = new Vector2u(Width * 4, Height * 4);
 
 		Nes = new Nes();
 	}
@@ -44,24 +40,25 @@ public class NesGui
 
 	public void StartNes()
 	{
-		var pixelColors = new Color[Height, Width];
-		var pixelArray = new byte[Height * Width * 4];
+		var bitmapData = new byte[Width * Height * 4];
 
-		GetTexturePixels(pixelColors, pixelArray);
-		
+		GetBitmapData(bitmapData);
 
-		var img = new Image(pixelColors);
+		var img = new Image(Width, Height, bitmapData);
 		var texture = new Texture(img);
 		var frame = new Sprite(texture);
 
 		while (Window.IsOpen)
 		{
+			Nes.Clock();
+			
 			Window.DispatchEvents();
 			Window.Clear();
 
 			Window.Draw(frame);
-			GetTexturePixels(pixelColors, pixelArray);
-			UpdateFrame(frame, pixelArray);
+			
+			GetBitmapData(bitmapData);
+			UpdateFrame(frame, bitmapData);
 
 			Window.Display();
 		}
@@ -72,19 +69,22 @@ public class NesGui
 		frame.Texture.Update(pixels);
 	}
 
-	private void GetTexturePixels(Color[,] pixelColors, byte[] pixelArray)
+	private void GetBitmapData(byte[] bitmapData)
 	{
-		for (var i = 0; i < Nes.Ppu.Screen.GetLength(0); i++)
-		for (var j = 0; j < Nes.Ppu.Screen.GetLength(1); j++)
+		var screen = Nes.Ppu.Screen;
+		var rows = screen.GetLength(0);
+		var cols = screen.GetLength(1);
+
+		for (var row = 0; row < rows; row++)
+		for (var col = 0; col < cols; col++)
 		{
-			var color = Colors.GetColor(Nes.Ppu.Screen[i, j]);
-
-			pixelColors[i, j] = color;
-
-			pixelArray[4 * i * Width + 4 * j] = color.R;
-			pixelArray[4 * i * Width + 4 * j + 1] = color.G;
-			pixelArray[4 * i * Width + 4 * j + 2] = color.B;
-			pixelArray[4 * i * Width + 4 * j + 3] = color.A;
+			var colorIndex = screen[row, col];
+			var pixelColor = Colors[colorIndex];
+			
+			bitmapData[4 * row * Width + 4 * col + 0] = pixelColor.R;
+			bitmapData[4 * row * Width + 4 * col + 1] = pixelColor.G;
+			bitmapData[4 * row * Width + 4 * col + 2] = pixelColor.B;
+			bitmapData[4 * row * Width + 4 * col + 3] = pixelColor.A;
 		}
 	}
 }
