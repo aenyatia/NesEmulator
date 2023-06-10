@@ -8,10 +8,10 @@ namespace NesEmulator;
 
 public class NesGui
 {
-	private const uint Width = 128;
-	private const uint Height = 128;
+	private const uint Width = 256;
+	private const uint Height = 240;
 	private const string Title = "Nes Emulator";
-	private const bool FullScreen = true;
+	private const bool FullScreen = false;
 
 	private RenderWindow Window { get; }
 	private Nes Nes { get; }
@@ -44,24 +44,11 @@ public class NesGui
 
 	public void StartNes()
 	{
-		Nes.Ppu.X();
+		var pixelColors = new Color[Height, Width];
+		var pixelArray = new byte[Height * Width * 4];
 
-		var pixelColors = new Color[128, 128];
-		var pixelArray = new byte[128 * 128 * 4];
-		for (var i = 0; i < Nes.Ppu.BitMapData.GetLength(0); i++)
-		{
-			for (var j = 0; j < Nes.Ppu.BitMapData.GetLength(1); j++)
-			{
-				var color = Colors.GetColor(Nes.Ppu.BitMapData[i, j]);
-
-				pixelColors[i, j] = color;
-
-				pixelArray[4 * i * 128 + 4 * j] = color.R;
-				pixelArray[4 * i * 128 + 4 * j + 1] = color.G;
-				pixelArray[4 * i * 128 + 4 * j + 2] = color.B;
-				pixelArray[4 * i * 128 + 4 * j + 3] = color.A;
-			}
-		}
+		GetTexturePixels(pixelColors, pixelArray);
+		
 
 		var img = new Image(pixelColors);
 		var texture = new Texture(img);
@@ -73,14 +60,31 @@ public class NesGui
 			Window.Clear();
 
 			Window.Draw(frame);
+			GetTexturePixels(pixelColors, pixelArray);
 			UpdateFrame(frame, pixelArray);
 
 			Window.Display();
 		}
 	}
 
-	private void UpdateFrame(Sprite frame, byte[] pixels)
+	private static void UpdateFrame(Sprite frame, byte[] pixels)
 	{
 		frame.Texture.Update(pixels);
+	}
+
+	private void GetTexturePixels(Color[,] pixelColors, byte[] pixelArray)
+	{
+		for (var i = 0; i < Nes.Ppu.Screen.GetLength(0); i++)
+		for (var j = 0; j < Nes.Ppu.Screen.GetLength(1); j++)
+		{
+			var color = Colors.GetColor(Nes.Ppu.Screen[i, j]);
+
+			pixelColors[i, j] = color;
+
+			pixelArray[4 * i * Width + 4 * j] = color.R;
+			pixelArray[4 * i * Width + 4 * j + 1] = color.G;
+			pixelArray[4 * i * Width + 4 * j + 2] = color.B;
+			pixelArray[4 * i * Width + 4 * j + 3] = color.A;
+		}
 	}
 }

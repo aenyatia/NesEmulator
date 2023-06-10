@@ -165,11 +165,8 @@ public sealed class Cpu
 
 		StackPush(SR);
 
-		//var lowByte = ReadByte(IrqVectorL);
-		//var highByte = ReadByte(IrqVectorH);
-
-		const byte lowByte = 0x00;
-		const byte highByte = 0xC0;
+		var lowByte = ReadByte(IrqVectorL);
+		var highByte = ReadByte(IrqVectorH);
 
 		PC = (highByte << 8) | lowByte;
 
@@ -213,6 +210,27 @@ public sealed class Cpu
 		Cycles += _cycles;
 
 		return _cycles;
+	}
+
+	public void Clock()
+	{
+		if (_cycles == 0)
+		{
+			// fetch
+			var opcode = NextByte();
+
+			// decode
+			var instruction = _instructions[opcode];
+
+			// execute
+			_cycles = 0;
+			var x = instruction.Execute();
+			_cycles += x;
+
+			Cycles += _cycles;
+		}
+
+		_cycles--;
 	}
 
 	#region Modes

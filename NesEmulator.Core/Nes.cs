@@ -12,7 +12,11 @@ public class Nes
 	public Ppu Ppu { get; }
 	public Controller Controller { get; }
 	public Cartridge? Cartridge { get; private set; }
+
+	
 	public bool IsRunning { get; set; }
+	public int SystemClock { get; set; }
+	
 
 	public Nes()
 	{
@@ -27,6 +31,12 @@ public class Nes
 		Cartridge = cartridge;
 	}
 
+	public void Reset()
+	{
+		Cpu.Reset();
+		SystemClock = 0;
+	}
+
 	public void Start()
 	{
 		if (Cartridge is null)
@@ -34,13 +44,18 @@ public class Nes
 
 		while (IsRunning)
 		{
-			var cycles = Cpu.ExecuteSingleInstruction();
+			Ppu.Clock();
 
-			// 1 cpu cycle = 3 ppu cycle
-			for (var i = 0; i < cycles * 3; i++)
+			if (SystemClock % 3 == 0)
+				Cpu.Clock();
+
+			if (Ppu.Nmi)
 			{
-				Ppu.Clock();
+				Ppu.Nmi = false;
+				Cpu.Nmi();
 			}
+
+			SystemClock++;
 		}
 	}
 }

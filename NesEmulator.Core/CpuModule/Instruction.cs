@@ -18,7 +18,7 @@ public class Instruction
 
 	public uint Opcode { get; }
 	public string Mnemonic { get; }
-	public uint Cycles { get; }
+	private uint Cycles { get; }
 
 	public uint Execute()
 	{

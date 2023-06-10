@@ -46,15 +46,13 @@ public class CpuMemory : IMemory
 
 	private uint ReadFromRam(uint address)
 	{
-		// todo calculate address (mirrors)
-
 		return _ram[address % 0x0800];
 	}
 
 	private uint ReadFromPpu(uint address)
 	{
-		// todo calculate address (mirrors)
-
+		address = (address - 0x2000) % 0x0008;
+		
 		return _nes.Ppu.Read(address);
 	}
 
@@ -65,7 +63,10 @@ public class CpuMemory : IMemory
 
 	private uint ReadFromCartridge(uint address)
 	{
-		return _nes.Cartridge?.ReadPrgRom((ushort)address) ?? throw new NullReferenceException(nameof(_nes.Cartridge));
+		if (_nes.Cartridge is null)
+			throw new NullReferenceException();
+		
+		return _nes.Cartridge.ReadPrgRom((ushort)address);
 	}
 
 	private static uint ReadFromUnusedMemory()
@@ -76,14 +77,12 @@ public class CpuMemory : IMemory
 
 	private void WriteToRam(uint address, uint data)
 	{
-		// todo calculate address (mirrors)
-
 		_ram[address % 0x0800] = data;
 	}
 
 	private void WriteToPpu(uint address, uint data)
 	{
-		// todo calculate address (mirrors)
+		address = (address - 0x2000) % 0x0008;
 
 		_nes.Ppu.Write(address, data);
 	}
@@ -96,7 +95,7 @@ public class CpuMemory : IMemory
 	private void WriteToCartridge(uint address, uint data)
 	{
 		if (_nes.Cartridge is null)
-			throw new NullReferenceException(nameof(_nes.Cartridge));
+			throw new NullReferenceException();
 
 		_nes.Cartridge.WritePrgRam((ushort)address, (byte)data);
 	}

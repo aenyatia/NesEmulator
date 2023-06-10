@@ -11,6 +11,8 @@ public class Cartridge
 	private readonly byte[] _prgRam;
 	private readonly IMapper _mapper;
 
+	public Header Header { get; set; } 
+
 	public static Cartridge Create(string path)
 	{
 		using var reader = new BinaryReader(File.OpenRead(path));
@@ -20,7 +22,7 @@ public class Cartridge
 		var chrRom = LoadChrRom(reader, header);
 		var mapper = LoadMapper(header);
 
-		return new Cartridge(prgRom, chrRom, mapper);
+		return new Cartridge(prgRom, chrRom, mapper, header);
 	}
 
 	private static Header LoadHeader(BinaryReader reader)
@@ -78,12 +80,13 @@ public class Cartridge
 		};
 	}
 
-	private Cartridge(byte[] prgRom, byte[] chrRom, IMapper mapper)
+	private Cartridge(byte[] prgRom, byte[] chrRom, IMapper mapper, Header header)
 	{
 		_prgRom = prgRom;
 		_chrRom = chrRom;
 		_mapper = mapper;
 		_prgRam = new byte[2048];
+		Header = header;
 	}
 
 	public byte ReadPrgRam(ushort address)

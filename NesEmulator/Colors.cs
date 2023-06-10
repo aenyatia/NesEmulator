@@ -75,6 +75,7 @@ public class Colors
 		new Color(0, 0, 0)
 	};
 
+	// 0x00 -> 0x3F (0 -> 63)
 	public Color GetColor(int index)
 	{
 		if (index is >= 0x00 and <= 0x3F)
