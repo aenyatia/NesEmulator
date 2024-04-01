@@ -20,10 +20,10 @@ public class Nes
 
 	public Nes()
 	{
-		Cpu = new Cpu(this);
-		CpuMemory = new CpuMemory(this);
-		Ppu = new Ppu(this);
-		Controller = new Controller();
+		// Cpu = new Cpu(this);
+		// CpuMemory = new CpuMemory(this);
+		// Ppu = new Ppu(this);
+		// Controller = new Controller();
 	}
 
 	public void LoadCartridge(Cartridge cartridge)
