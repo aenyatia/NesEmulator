@@ -5,8 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NesEmulator.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="800" Width="800"
+        KeyDown="MainWindow_OnKeyDown">
     <Grid>
-
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+        <Image Name="image"
+               Grid.Column="0"
+               Stretch="Fill"
+               RenderOptions.BitmapScalingMode="NearestNeighbor"
+               RenderOptions.EdgeMode="Aliased">
+        </Image>
+        <Button Grid.Column="1" Click="ButtonBase_OnClick">Start</Button>
     </Grid>
 </Window>
