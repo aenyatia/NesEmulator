@@ -1,4 +1,4 @@
-﻿namespace NesEmulator.SnakeGui;
+﻿namespace NesEmulator;
 
 public static class Code
 {

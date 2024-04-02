@@ -1,5 +1,6 @@
-﻿using NesEmulator.SnakeGui;
+﻿using NesEmulator;
 
-Console.WriteLine("Hello Nes!");
+var nes = new Nes();
 
-new SnakeGame().LoadAndRun();
+nes.Load();
+nes.Run();

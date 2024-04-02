@@ -16,13 +16,4 @@
       <PackageReference Include="SFML.Net" Version="2.5.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <None Update="Cartridges\mario.nes">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Cartridges\nestest.nes">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-
 </Project>

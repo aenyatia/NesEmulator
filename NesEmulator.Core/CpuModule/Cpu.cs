@@ -15,7 +15,7 @@ public sealed class Cpu
     private const uint StackBot = 0x00;
 
     private readonly Instruction[] _instructions = new Instruction[256];
-    private readonly IMemory _memory;
+    private readonly Ram _memory;
 
     private uint _a;
     private uint _x;
@@ -30,7 +30,7 @@ public sealed class Cpu
 
     public uint Cycles { get; private set; }
 
-    public Cpu(IMemory memory,
+    public Cpu(Ram memory,
         uint a = 0x00, uint x = 0x00, uint y = 0x00,
         uint sr = 0x00, uint sp = 0x00, uint pc = 0x0000)
     {
