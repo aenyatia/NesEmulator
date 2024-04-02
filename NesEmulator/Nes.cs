@@ -1,4 +1,4 @@
-﻿using NesEmulator.Core.CpuModule;
+﻿using NesEmulator.Core;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -13,8 +13,7 @@ public class Nes
     private const string Title = "Nes Emulator";
 
     private RenderWindow Window { get; }
-    private Cpu Cpu { get; }
-    private Ram Ram { get; } = new();
+    private Bus Bus { get; } = new();
 
     public Nes()
     {
@@ -25,30 +24,25 @@ public class Nes
             switch (args.Code)
             {
                 case Keyboard.Key.W:
-                    Ram.Write(0xFF, 0x77);
+                    Bus.Write(0xFF, 0x77);
                     break;
                 case Keyboard.Key.S:
-                    Ram.Write(0xFF, 0x73);
+                    Bus.Write(0xFF, 0x73);
                     break;
                 case Keyboard.Key.A:
-                    Ram.Write(0xFF, 0x61);
+                    Bus.Write(0xFF, 0x61);
                     break;
                 case Keyboard.Key.D:
-                    Ram.Write(0xFF, 0x64);
+                    Bus.Write(0xFF, 0x64);
                     break;
             }
         };
         Window.SetFramerateLimit(Fps);
-
-        Cpu = new Cpu(Ram);
     }
 
     public void Load()
     {
-        Ram.Load(Code.Snake, 0x0600);
-        Ram.Write(0xFFFC, 0x00);
-        Ram.Write(0xFFFD, 0x06);
-        Cpu.Reset();
+        Bus.Cpu.Reset();
     }
 
     public void Run()
@@ -67,9 +61,9 @@ public class Nes
             Window.Display();
 
             for (var i = 0; i < 100; i++)
-                Cpu.ExecuteSingleInstruction();
+                Bus.Cpu.ExecuteSingleInstruction();
 
-            Ram.Write(0xFE, (uint)Random.Shared.Next(1, 16));
+            Bus.Write(0xFE, (uint)Random.Shared.Next(1, 16));
 
             UpdateFrameData(ref frameData);
             texture.Update(frameData);
@@ -81,7 +75,7 @@ public class Nes
         var pixelIndex = 0;
         for (uint i = 0x0200; i < 0x0600; i++)
         {
-            var color = GetColor(Ram.Read(i));
+            var color = GetColor(Bus.Read(i));
 
             frameData[pixelIndex] = color.R;
             frameData[pixelIndex + 1] = color.G;

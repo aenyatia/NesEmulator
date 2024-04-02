@@ -15,7 +15,7 @@ public sealed class Cpu
     private const uint StackBot = 0x00;
 
     private readonly Instruction[] _instructions = new Instruction[256];
-    private readonly Ram _memory;
+    private readonly Bus _bus;
 
     private uint _a;
     private uint _x;
@@ -30,13 +30,13 @@ public sealed class Cpu
 
     public uint Cycles { get; private set; }
 
-    public Cpu(Ram memory,
+    public Cpu(Bus bus,
         uint a = 0x00, uint x = 0x00, uint y = 0x00,
         uint sr = 0x00, uint sp = 0x00, uint pc = 0x0000)
     {
         CreateInstructions();
 
-        _memory = memory;
+        _bus = bus;
 
         A = a;
         X = x;
@@ -1147,12 +1147,12 @@ public sealed class Cpu
 
     private void WriteByte(uint address, uint value)
     {
-        _memory.Write(address, value);
+        _bus.Write(address, value);
     }
 
     private uint ReadByte(uint address)
     {
-        return _memory.Read(address);
+        return _bus.Read(address);
     }
 
     private uint ReadWord(uint address)
@@ -1165,7 +1165,7 @@ public sealed class Cpu
 
     private uint NextByte()
     {
-        return _memory.Read(PC++);
+        return _bus.Read(PC++);
     }
 
     private uint NextWord()
