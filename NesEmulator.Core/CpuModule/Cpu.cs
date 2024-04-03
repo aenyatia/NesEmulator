@@ -1147,7 +1147,7 @@ public sealed class Cpu
 
     private void WriteByte(uint address, uint value)
     {
-        _bus.Write(address, value);
+        _bus.Write(address, (byte)value);
     }
 
     private uint ReadByte(uint address)

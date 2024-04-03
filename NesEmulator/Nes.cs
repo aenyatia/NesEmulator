@@ -63,7 +63,7 @@ public class Nes
             for (var i = 0; i < 100; i++)
                 Bus.Cpu.ExecuteSingleInstruction();
 
-            Bus.Write(0xFE, (uint)Random.Shared.Next(1, 16));
+            Bus.Write(0xFE, (byte)Random.Shared.Next(1, 16));
 
             UpdateFrameData(ref frameData);
             texture.Update(frameData);
