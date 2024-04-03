@@ -7,8 +7,8 @@ public class Rom
     private const int ChrRomPageSize = 8192;
 
     private readonly byte[] _prgRom;
-    private readonly byte[] _chrRom;
-    private readonly Mirroring _screenMirroring;
+    public readonly byte[] ChrRom;
+    public readonly Mirroring ScreenMirroring;
     private readonly byte _mapper;
 
     public Rom(string path)
@@ -35,11 +35,11 @@ public class Rom
         var fourScreen = (control1 & 0b0000_1000) >> 3;
         var mirroring = control1 & 0b0000_0001;
         if (fourScreen == 1)
-            _screenMirroring = Mirroring.FourScreen;
+            ScreenMirroring = Mirroring.FourScreen;
         else if (mirroring == 0)
-            _screenMirroring = Mirroring.Horizontal;
+            ScreenMirroring = Mirroring.Horizontal;
         else if (mirroring == 1)
-            _screenMirroring = Mirroring.Vertical;
+            ScreenMirroring = Mirroring.Vertical;
 
         var prgRomSize = PrgRomPageSize * prgRom;
         var chrRomSize = ChrRomPageSize * chrRom;
@@ -55,9 +55,9 @@ public class Rom
         if (pgrRead != prgRomSize)
             throw new Exception("error during reading prg rom");
 
-        _chrRom = new byte[chrRomSize];
+        ChrRom = new byte[chrRomSize];
         reader.BaseStream.Seek(chrRomStart, SeekOrigin.Begin);
-        var chrRead = reader.Read(_chrRom, 0, chrRomSize);
+        var chrRead = reader.Read(ChrRom, 0, chrRomSize);
         if (chrRead != chrRomSize)
             throw new Exception("error during reading chr rom");
     }
