@@ -1,4 +1,5 @@
 ﻿using NesEmulator.Core;
+using NesEmulator.Render;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -8,8 +9,8 @@ namespace NesEmulator;
 public class Nes
 {
     private const uint Fps = 60;
-    private const uint Width = 640;
-    private const uint Height = 640;
+    private const uint Width = 1024;
+    private const uint Height = 1024;
     private const string Title = "Nes Emulator";
 
     private RenderWindow Window { get; }
@@ -46,6 +47,35 @@ public class Nes
     }
 
     public void Run()
+    {
+        var texture = new Texture(256, 240);
+        var screen = new Sprite(texture);
+        screen.Scale = new Vector2f(4, 4);
+
+        var frame = new Frame();
+        var engine = new Engine();
+        var colors = new Colors();
+
+        Bus.DrawFrame += (_, _) =>
+        {
+            engine.Render(Bus.Ppu, frame, colors);
+            screen.Texture.Update(frame);
+        };
+
+        
+        while (Window.IsOpen)
+        {
+            Window.DispatchEvents();
+            Window.Clear();
+            Window.Draw(screen);
+            Window.Display();
+
+            for (var i = 0; i < 100; i++)
+                Bus.Tick();
+        }
+    }
+
+    public void RunSnake()
     {
         var texture = new Texture(32, 32);
         var frame = new Sprite(texture);
@@ -98,5 +128,114 @@ public class Nes
         if (index is 7 or 14) return Color.Yellow;
 
         return Color.Cyan;
+    }
+
+    public void RunTile()
+    {
+        const uint textureWidth = 256u;
+        const uint textureHeight = 240u;
+
+        var texture = new Texture(textureWidth, textureHeight);
+        var chrRom = new Rom("NesRoms/pacman.nes").ChrRom;
+        var frame = new Sprite(texture);
+
+        // var frameData = ShowTile(ref chrRom, 0, 0);
+        var frameData = ShowTiles(ref chrRom);
+        texture.Update(frameData);
+
+        frame.Scale = new Vector2f(8, 8);
+
+        while (Window.IsOpen)
+        {
+            Window.DispatchEvents();
+            Window.Clear();
+            Window.Draw(frame);
+            Window.Display();
+        }
+    }
+
+    private Frame ShowTiles(ref byte[] chrRom)
+    {
+        var frame = new Frame();
+        var colors = new Colors();
+
+        for (var bank = 0; bank < 1; bank++)
+        {
+            for (var tile = 0; tile < 256; tile++)
+            {
+                var tileStartIndex = bank * 0x1000 + tile * 16;
+                var tileData = chrRom.AsSpan().Slice(tileStartIndex, 16);
+
+                for (var y = 0; y < 8; y++) // iterate through rows
+                {
+                    var upper = tileData[y];
+                    var lower = tileData[y + 8];
+
+                    // lower       upper
+                    // 7654 3210   7654 3210
+                    // 1001_0100   0011_1101
+                    for (var x = 7; x >= 0; x--) // iterate through cols
+                    {
+                        var value = ((upper & 0b0000_0001) << 1) | (lower & 0b0000_0001);
+                        lower >>= 1;
+                        upper >>= 1;
+
+                        var color = value switch
+                        {
+                            0 => colors[0x01],
+                            1 => colors[0x23],
+                            2 => colors[0x27],
+                            3 => colors[0x30],
+                            _ => throw new Exception("unknown color index")
+                        };
+
+                        frame.SetPixel(x + (tile % 16) * 8, y + (tile / 16) * 8, color);
+                    }
+                }
+            }
+        }
+
+        return frame;
+    }
+
+    private Frame ShowTile(ref byte[] chrRom, uint bankNumber, uint tileNumber)
+    {
+        var frame = new Frame();
+        var colors = new Colors();
+
+        var bank = bankNumber * 0x1000;
+
+        var tileStartIndex = bank + tileNumber * 16; // inclusive
+
+        var tile = chrRom.AsSpan().Slice((int)tileStartIndex, 16);
+
+        for (var y = 0; y < 8; y++) // iterate through rows
+        {
+            var lower = tile[y];
+            var upper = tile[y + 8];
+
+            // lower       upper
+            // 7654 3210   7654 3210
+            // 1001_0100   0011_1101
+            for (var x = 7; x >= 0; x--) // iterate through cols
+            {
+                var value = ((upper & 0b0000_0001) << 1) | (lower & 0b0000_0001);
+                lower >>= 1;
+                upper >>= 1;
+
+                var color = value switch
+                {
+                    0 => colors[0x01],
+                    1 => colors[0x23],
+                    2 => colors[0x27],
+                    3 => colors[0x30],
+                    _ => throw new Exception("unknown color index")
+                };
+
+                frame.SetPixel(x, y, color);
+            }
+        }
+
+        return frame;
     }
 }

@@ -17,7 +17,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="snake.nes">
+      <None Update="NesRoms\snake.nes">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="NesRoms\mario.nes">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="NesRoms\nestest.nes">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="NesRoms\pacman.nes">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

@@ -7,14 +7,16 @@ public class Bus
 {
     private readonly byte[] _cpuRam = new byte[2048];
 
+    public event EventHandler? DrawFrame;
+
     public Cpu Cpu { get; }
-    private Ppu Ppu { get; }
+    public Ppu Ppu { get; }
     private Rom Rom { get; }
 
     public Bus()
     {
         Cpu = new Cpu(this);
-        Rom = new Rom("snake.nes");
+        Rom = new Rom("NesRoms/pacman.nes");
         Ppu = new Ppu(Rom);
     }
 
@@ -144,6 +146,41 @@ public class Bus
         if (address is >= 0x8000 and < 0x10000)
         {
             throw new Exception("cannot write to prg rom");
+        }
+    }
+
+    private bool PollNmiStatus()
+    {
+        if (Ppu.PollNmiInterrupt() == 0)
+            return false;
+
+        if (Ppu.PollNmiInterrupt() == 1)
+            return true;
+
+        throw new Exception("invalid nmi state");
+    }
+
+    private bool _first = true;
+    public void Tick()
+    {
+        if (_first)
+        {
+            Cpu.Reset();
+            Ppu.Tick(24);
+            _first = false;
+        }
+        
+        if (PollNmiStatus())
+        {
+            Cpu.Nmi();
+        }
+
+        // move to cpu???
+        var cycles = Cpu.ExecuteSingleInstruction();
+
+        if (Ppu.Tick(cycles * 3))
+        {
+            DrawFrame?.Invoke(this, EventArgs.Empty);
         }
     }
 }
