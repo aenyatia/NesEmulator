@@ -2,12 +2,12 @@
 
 public class Ppu
 {
-    private readonly byte[] _chrRom; // pattern table 0x0000 - 0x1FFF 8kB
-    private readonly byte[] _vRam = new byte[2048]; // name table 0x2000 - 0x2FFF 4 * 1kB (mirroring to 2kB)
+    public readonly byte[] ChrRom; // pattern table 0x0000 - 0x1FFF 8kB
+    public readonly byte[] VRam = new byte[2048]; // name table 0x2000 - 0x2FFF 4 * 1kB (mirroring to 2kB)
     private readonly byte[] _paletteTable = new byte[32]; // palette table 0x3F00 - 0x3F1F 32 bytes
     private readonly Mirroring _mirroring;
 
-    private readonly ControlRegister _controlRegister = new(); // 0x2000
+    public readonly ControlRegister ControlRegister = new(); // 0x2000
     private readonly MaskRegister _maskRegister = new(); // 0x2001
     private readonly StatusRegister _statusRegister = new(); // 0x2002
     private readonly ScrollRegister _scrollRegister = new(); // 0x2005
@@ -23,12 +23,51 @@ public class Ppu
     public Ppu(Rom rom)
     {
         _mirroring = rom.ScreenMirroring;
-        _chrRom = rom.ChrRom;
+        ChrRom = rom.ChrRom;
+    }
+
+    private uint _scanline;
+    private uint _cycles;
+    private uint _nmiInterrupt;
+
+    public bool Tick(uint cycles)
+    {
+        _cycles += cycles;
+
+        if (_cycles >= 341)
+        {
+            _cycles -= 341;
+            _scanline += 1;
+
+            if (_scanline == 241)
+            {
+                _statusRegister.VerticalVBlanc(true);
+                _statusRegister.SpriteZeroHit(false);
+
+                if (ControlRegister.GenerateVBlancNmi() == 1)
+                {
+                    _nmiInterrupt = 1;
+                }
+            }
+
+            if (_scanline >= 262)
+            {
+                _scanline = 0;
+                _nmiInterrupt = 0;
+
+                _statusRegister.SpriteZeroHit(false);
+                _statusRegister.ResetVerticalVBlanc();
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void IncrementVRamAddress()
     {
-        _addressRegister.Increment(_controlRegister.VRamAddressIncrement());
+        _addressRegister.Increment(ControlRegister.VRamAddressIncrement());
     }
 
     private uint MirrorVRamAddress(ushort address)
@@ -78,12 +117,20 @@ public class Ppu
         return address;
     }
 
+    public uint PollNmiInterrupt()
+    {
+        return _nmiInterrupt;
+    }
+
     #region Read/Write Registers
 
     public void WriteToPpuCtrl(byte value) // 0x2000 write-only
     {
-        var nmiStatus = _controlRegister.GenerateVBlancNmi(); // ???
-        _controlRegister.Update(value);
+        var nmiStatus = ControlRegister.GenerateVBlancNmi(); // ???
+        ControlRegister.Update(value);
+
+        if (nmiStatus == 0 && ControlRegister.GenerateVBlancNmi() == 1 && _statusRegister.IsInVBlanc())
+            _nmiInterrupt = 1;
     }
 
     public void WriteToPpuMask(byte value) // 0x2001 write-only
@@ -127,7 +174,7 @@ public class Ppu
 
     public void WriteToPpuAddress(byte value) // 0x2006 write-only
     {
-        _controlRegister.Update(value);
+        ControlRegister.Update(value);
     }
 
     public void Write(byte value) // 0x2007 write
@@ -141,7 +188,7 @@ public class Ppu
         else if (address is >= 0x2000 and < 0x3000) // write to vRam (name table)
         {
             var addr = MirrorVRamAddress((ushort)address);
-            _vRam[addr] = value;
+            VRam[addr] = value;
         }
         else if (address is >= 0x3000 and < 0x3F00) // write to unused space
         {
@@ -168,7 +215,7 @@ public class Ppu
         if (address is >= 0x0000 and < 0x2000) // read from chr rom
         {
             var data = _internalDataBuffer;
-            _internalDataBuffer = _chrRom[address];
+            _internalDataBuffer = ChrRom[address];
             return data;
         }
 
@@ -176,7 +223,7 @@ public class Ppu
         {
             var data = _internalDataBuffer;
             var addr = MirrorVRamAddress((ushort)address);
-            _internalDataBuffer = _vRam[addr];
+            _internalDataBuffer = VRam[addr];
             return data;
         }
 
