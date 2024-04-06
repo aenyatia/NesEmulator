@@ -128,7 +128,15 @@ public class Bus
         }
 
         if (address is 0x2014)
-            throw new NotImplementedException();
+        {
+            var buffer = new byte[256];
+            var hi = data << 8;
+
+            for (var i = 0; i < 256; i++)
+                buffer[i] = Read((uint)(hi + i));
+
+            Ppu.WriteToOamDma(buffer);
+        }
 
         if (address is >= 0x2008 and < 0x4000)
         {
@@ -161,6 +169,7 @@ public class Bus
     }
 
     private bool _first = true;
+
     public void Tick()
     {
         if (_first)
@@ -169,7 +178,7 @@ public class Bus
             Ppu.Tick(24);
             _first = false;
         }
-        
+
         if (PollNmiStatus())
         {
             Cpu.Nmi();
