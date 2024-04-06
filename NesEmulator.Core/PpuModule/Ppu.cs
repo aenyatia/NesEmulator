@@ -4,7 +4,7 @@ public class Ppu
 {
     public readonly byte[] ChrRom; // pattern table 0x0000 - 0x1FFF 8kB
     public readonly byte[] VRam = new byte[2048]; // name table 0x2000 - 0x2FFF 4 * 1kB (mirroring to 2kB)
-    private readonly byte[] _paletteTable = new byte[32]; // palette table 0x3F00 - 0x3F1F 32 bytes
+    public readonly byte[] PaletteTable = new byte[32]; // palette table 0x3F00 - 0x3F1F 32 bytes
     private readonly Mirroring _mirroring;
 
     public readonly ControlRegister ControlRegister = new(); // 0x2000
@@ -14,9 +14,9 @@ public class Ppu
     private readonly AddressRegister _addressRegister = new(); // 0x2006
 
     private byte _oamAddress; // 0x2003
-    private readonly byte[] _oamDataBuffer = new byte[256]; // internal oam 64 * 4 bytes 0x2004
+    public readonly byte[] OamDataBuffer = new byte[256]; // internal oam 64 * 4 bytes 0x2004
 
-    private byte _oamDma; // 0x2014
+    //private byte _oamDma; // 0x2014
 
     private byte _internalDataBuffer;
 
@@ -158,13 +158,13 @@ public class Ppu
 
     public void WriteToOamData(byte value) // 0x2004 write
     {
-        _oamDataBuffer[_oamAddress] = value;
+        OamDataBuffer[_oamAddress] = value;
         _oamAddress += 1;
     }
 
     public byte ReadFromOamData() // 0x2004 read
     {
-        return _oamDataBuffer[_oamAddress];
+        return OamDataBuffer[_oamAddress];
     }
 
     public void WriteToPpuScroll(byte value) // 0x2005 write-only
@@ -197,7 +197,7 @@ public class Ppu
         else if (address is >= 0x3F00 and < 0x4000) // write to palette
         {
             // add mirroring
-            _paletteTable[address - 0x3F00] = value;
+            PaletteTable[address - 0x3F00] = value;
         }
         else // write to outside boundary
         {
@@ -235,7 +235,7 @@ public class Ppu
         if (address is >= 0x3F00 and < 0x4000) // read from palette table
         {
             // add mirroring
-            return _paletteTable[address - 0x3F00];
+            return PaletteTable[address - 0x3F00];
         }
 
         throw new Exception("unexpected access to mirrored space");
@@ -245,7 +245,7 @@ public class Ppu
     {
         foreach (var value in data)
         {
-            _oamDataBuffer[_oamAddress] = value;
+            OamDataBuffer[_oamAddress] = value;
             _oamAddress += 1;
         }
     }
