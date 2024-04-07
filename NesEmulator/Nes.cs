@@ -1,4 +1,5 @@
 ﻿using NesEmulator.Core;
+using NesEmulator.Core.CartridgeModule;
 using NesEmulator.Render;
 using SFML.Graphics;
 using SFML.System;

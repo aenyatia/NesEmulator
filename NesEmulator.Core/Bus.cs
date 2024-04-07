@@ -1,4 +1,5 @@
-﻿using NesEmulator.Core.CpuModule;
+﻿using NesEmulator.Core.CartridgeModule;
+using NesEmulator.Core.CpuModule;
 using NesEmulator.Core.PpuModule;
 
 namespace NesEmulator.Core;

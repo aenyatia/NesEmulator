@@ -1,4 +1,6 @@
-﻿namespace NesEmulator.Core.PpuModule;
+﻿using NesEmulator.Core.CartridgeModule;
+
+namespace NesEmulator.Core.PpuModule;
 
 public class Ppu
 {
