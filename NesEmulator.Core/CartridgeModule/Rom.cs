@@ -73,10 +73,3 @@ public class Rom
         return _prgRom[address];
     }
 }
-
-public enum Mirroring
-{
-    Vertical,
-    Horizontal,
-    FourScreen
-}
