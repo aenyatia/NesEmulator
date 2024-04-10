@@ -1,4 +1,4 @@
-﻿namespace NesEmulator.Core.PpuModule;
+﻿namespace NesEmulator.Core.PpuModule.Registers;
 
 public class MaskRegister
 {
