@@ -1,29 +1,20 @@
 ﻿namespace NesEmulator.Core.CpuModule;
 
-public class Instruction
+public class Instruction(
+	Func<bool> mode,
+	Func<bool> operation,
+	uint opcode,
+	string mnemonic,
+	uint cycles)
 {
-	private readonly Func<bool> _mode;
-	private readonly Func<bool> _operation;
-
-	public Instruction(Func<bool> mode, Func<bool> operation,
-		uint opcode, string mnemonic, uint cycles)
-	{
-		_mode = mode;
-		_operation = operation;
-
-		Opcode = opcode;
-		Mnemonic = mnemonic;
-		Cycles = cycles;
-	}
-
-	public uint Opcode { get; }
-	public string Mnemonic { get; }
-	private uint Cycles { get; }
+	public uint Opcode { get; } = opcode;
+	public string Mnemonic { get; } = mnemonic;
+	private uint Cycles { get; } = cycles;
 
 	public uint Execute()
 	{
-		var modeCross = _mode();
-		var opCross = _operation();
+		var modeCross = mode();
+		var opCross = operation();
 
 		return modeCross && opCross
 			? Cycles + 1
