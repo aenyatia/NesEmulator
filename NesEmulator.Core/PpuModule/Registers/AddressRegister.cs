@@ -59,8 +59,8 @@ public class AddressRegister
         _hiPtr = true;
     }
 
-    public uint Get()
-        => (uint)((_hi << 8) | _lo);
+    public ushort Get()
+        => (ushort)((_hi << 8) | _lo);
 
     private void Set(ushort address)
     {
