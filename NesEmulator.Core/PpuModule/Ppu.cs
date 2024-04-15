@@ -1,13 +1,12 @@
 ﻿using NesEmulator.Core.CartridgeModule;
+using NesEmulator.Core.PpuModule.Registers;
 
 namespace NesEmulator.Core.PpuModule;
 
-public class Ppu
+public class Ppu(Cartridge cartridge)
 {
-    public readonly byte[] ChrRom; // pattern table 0x0000 - 0x1FFF 8kB
-    public readonly byte[] VRam = new byte[2048]; // name table 0x2000 - 0x2FFF 4 * 1kB (mirroring to 2kB)
+    public PpuRam VRam { get; } = new(cartridge.Header.Mirroring); // nametable 0x0000 - 0x1FFF 8kB
     public readonly byte[] PaletteTable = new byte[32]; // palette table 0x3F00 - 0x3F1F 32 bytes
-    private readonly Mirroring _mirroring;
 
     public readonly ControlRegister ControlRegister = new(); // 0x2000
     private readonly MaskRegister _maskRegister = new(); // 0x2001
@@ -18,15 +17,9 @@ public class Ppu
     private byte _oamAddress; // 0x2003
     public readonly byte[] OamDataBuffer = new byte[256]; // internal oam 64 * 4 bytes 0x2004
 
-    //private byte _oamDma; // 0x2014
+    // private byte _oamDma; // 0x2014
 
     private byte _internalDataBuffer;
-
-    public Ppu(Rom rom)
-    {
-        _mirroring = rom.ScreenMirroring;
-        ChrRom = rom.ChrRom;
-    }
 
     private uint _scanline;
     private uint _cycles;
@@ -72,185 +65,206 @@ public class Ppu
         _addressRegister.Increment(ControlRegister.VRamAddressIncrement());
     }
 
-    private uint MirrorVRamAddress(ushort address)
-    {
-        // address from 0x2000 to 0x2FFF 4kB
-        address -= 0x2000; // 0x0000 - 0x0FFF
-
-        var nameTableIndex = address / 0x400;
-
-        // Vertical mirroring: $2000 equals $2800 and $2400 equals $2C00
-        // Horizontal mirroring: $2000 equals $2400 and $2800 equals $2C00
-        if (_mirroring == Mirroring.Horizontal)
-        {
-            // inx == 0 nothing to do
-
-            if (nameTableIndex == 1)
-            {
-                address -= 0x0400;
-            }
-
-            if (nameTableIndex == 2)
-            {
-                address -= 0x0400;
-            }
-
-            if (nameTableIndex == 3)
-            {
-                address -= 0x0800;
-            }
-        }
-
-        if (_mirroring == Mirroring.Vertical)
-        {
-            // inx == 0 or 1 nothing to do
-
-            if (address == 2)
-            {
-                address -= 0x800;
-            }
-
-            if (address == 3)
-            {
-                address -= 0x800;
-            }
-        }
-
-        return address;
-    }
-
     public uint PollNmiInterrupt()
     {
         return _nmiInterrupt;
     }
 
-    #region Read/Write Registers
-
-    public void WriteToPpuCtrl(byte value) // 0x2000 write-only
+    public byte Read(uint address)
     {
-        var nmiStatus = ControlRegister.GenerateVBlancNmi(); // ???
-        ControlRegister.Update(value);
+        // mirroring 0010 0000 0000 0111 - 0x2007
+        // 0x2000 - 0x2007
+        // 0x2008 - 0x200F
+        // 0x2010 - 0x2017
+        // 0x2018 - 0x201F
+        address &= 0b0010_0000_0000_0111;
 
-        if (nmiStatus == 0 && ControlRegister.GenerateVBlancNmi() == 1 && _statusRegister.IsInVBlanc())
-            _nmiInterrupt = 1;
-    }
-
-    public void WriteToPpuMask(byte value) // 0x2001 write-only
-    {
-        _maskRegister.Update(value);
-    }
-
-    public byte ReadFromPpuStatus() // 0x2002 read-only
-    {
-        var status = _statusRegister.Get();
-
-        // Reading the status register will clear bit 7 mentioned above and also the address latch used by PPUSCROLL and PPUADDR.
-        // It does not clear the sprite 0 hit or overflow bit.
-        _statusRegister.ResetVerticalVBlanc();
-        _scrollRegister.ResetLatch();
-        _addressRegister.ResetLatch();
-
-        return status;
-    }
-
-    public void WriteToOamAddress(byte value) // 0x2003 write-only
-    {
-        _oamAddress = value;
-    }
-
-    public void WriteToOamData(byte value) // 0x2004 write
-    {
-        OamDataBuffer[_oamAddress] = value;
-        _oamAddress += 1;
-    }
-
-    public byte ReadFromOamData() // 0x2004 read
-    {
-        return OamDataBuffer[_oamAddress];
-    }
-
-    public void WriteToPpuScroll(byte value) // 0x2005 write-only
-    {
-        _scrollRegister.Write(value);
-    }
-
-    public void WriteToPpuAddress(byte value) // 0x2006 write-only
-    {
-        ControlRegister.Update(value);
-    }
-
-    public void Write(byte value) // 0x2007 write
-    {
-        var address = _addressRegister.Get();
-
-        if (address is >= 0x0000 and < 0x2000) // write to chr rom
+        return address switch
         {
-            throw new Exception("attempt to write to chr rom");
+            0x2002 => ReadStatusRegister(),
+            0x2004 => ReadFromOamData(),
+            0x2007 => ReadPpuRam(),
+            _ => throw new Exception($"Attempt to read from write-only PPU address {address}")
+        };
+
+        byte ReadStatusRegister() // 0x2002 read-only
+        {
+            var status = _statusRegister.Get();
+
+            _statusRegister.ResetVerticalVBlanc();
+            _scrollRegister.ResetLatch();
+            _addressRegister.ResetLatch();
+
+            return status;
         }
-        else if (address is >= 0x2000 and < 0x3000) // write to vRam (name table)
+
+        byte ReadFromOamData() // 0x2004 read
         {
-            var addr = MirrorVRamAddress((ushort)address);
-            VRam[addr] = value;
+            return OamDataBuffer[_oamAddress];
         }
-        else if (address is >= 0x3000 and < 0x3F00) // write to unused space
+
+        byte ReadPpuRam() // 0x2007 read
         {
-            throw new Exception("attempt to write free space");
-        }
-        else if (address is >= 0x3F00 and < 0x4000) // write to palette
-        {
-            // add mirroring
-            PaletteTable[address - 0x3F00] = value;
-        }
-        else // write to outside boundary
-        {
+            var address = _addressRegister.Get();
+            IncrementVRamAddress();
+
+            if (address < 0x2000) // read from chr rom
+            {
+                var data = _internalDataBuffer;
+                _internalDataBuffer = cartridge.ReadChrRom(address);
+                return data;
+            }
+
+            if (address is >= 0x2000 and < 0x3000) // read from vRam (name table)
+            {
+                var data = _internalDataBuffer;
+                //var addr = MirrorVRamAddress(address);
+                _internalDataBuffer = VRam.Read(address);
+                return data;
+            }
+
+            if (address is >= 0x3000 and < 0x3F00) // read from unused space
+            {
+                throw new Exception("attempt to read free space");
+            }
+
+            if (address is >= 0x3F00 and < 0x4000) // read from palette table
+            {
+                // add mirroring
+                return PaletteTable[address - 0x3F00];
+            }
+
             throw new Exception("unexpected access to mirrored space");
         }
-
-        IncrementVRamAddress();
     }
 
-    public byte Read() // 0x2007 read
+    public void WriteToODma(byte data) // 2014
     {
-        var address = _addressRegister.Get();
-        IncrementVRamAddress();
+        var buffer = new byte[256];
+        var hi = data << 8;
 
-        if (address is >= 0x0000 and < 0x2000) // read from chr rom
-        {
-            var data = _internalDataBuffer;
-            _internalDataBuffer = ChrRom[address];
-            return data;
-        }
+        for (var i = 0; i < 256; i++)
+            buffer[i] = Read((uint)(hi + i));
 
-        if (address is >= 0x2000 and < 0x3000) // read from vRam (name table)
-        {
-            var data = _internalDataBuffer;
-            var addr = MirrorVRamAddress((ushort)address);
-            _internalDataBuffer = VRam[addr];
-            return data;
-        }
-
-        if (address is >= 0x3000 and < 0x3F00) // read from unused space
-        {
-            throw new Exception("attempt to read free space");
-        }
-
-        if (address is >= 0x3F00 and < 0x4000) // read from palette table
-        {
-            // add mirroring
-            return PaletteTable[address - 0x3F00];
-        }
-
-        throw new Exception("unexpected access to mirrored space");
-    }
-
-    public void WriteToOamDma(byte[] data) // 0x2014
-    {
-        foreach (var value in data)
+        foreach (var value in buffer)
         {
             OamDataBuffer[_oamAddress] = value;
             _oamAddress += 1;
         }
     }
 
-    #endregion
+    public void Write(ushort address, byte data)
+    {
+        // mirroring 0010 0000 0000 0111 - 0x2007
+        // 0x2000 - 0x2007
+        // 0x2008 - 0x200F
+        // 0x2010 - 0x2017
+        // 0x2018 - 0x201F
+        address &= 0b0010_0000_0000_0111;
+
+        switch (address)
+        {
+            // write control
+            case 0x2000:
+                WriteToPpuCtrl(data);
+                break;
+            // write mask
+            case 0x2001:
+                WriteToPpuMask(data);
+                break;
+            // write oam address
+            case 0x2003:
+                WriteToOamAddress(data);
+                break;
+            // write oam data
+            case 0x2004:
+                WriteToOamData(data);
+                break;
+            // write scroll
+            case 0x2005:
+                WriteToPpuScroll(data);
+                break;
+            // write address
+            case 0x2006:
+                WriteToPpuAddress(data);
+                break;
+            // write
+            case 0x2007:
+                WritePpuRam(data);
+                break;
+            case 0x2014:
+            {
+                
+                break;
+            }
+        }
+
+        throw new Exception("$\"Attempt to write to read-only PPU address {address}\"");
+
+        void WriteToPpuCtrl(byte value) // 0x2000 write-only
+        {
+            var nmiStatus = ControlRegister.GenerateVBlancNmi(); // ???
+            ControlRegister.Update(value);
+
+            if (nmiStatus == 0 && ControlRegister.GenerateVBlancNmi() == 1 && _statusRegister.IsInVBlanc())
+                _nmiInterrupt = 1;
+        }
+
+        void WriteToPpuMask(byte value) // 0x2001 write-only
+        {
+            _maskRegister.Update(value);
+        }
+
+        void WriteToOamAddress(byte value) // 0x2003 write-only
+        {
+            _oamAddress = value;
+        }
+
+        void WriteToOamData(byte value) // 0x2004 write
+        {
+            OamDataBuffer[_oamAddress] = value;
+            _oamAddress += 1;
+        }
+
+        void WriteToPpuScroll(byte value) // 0x2005 write-only
+        {
+            _scrollRegister.Write(value);
+        }
+
+        void WriteToPpuAddress(byte value) // 0x2006 write-only
+        {
+            ControlRegister.Update(value);
+        }
+
+        void WritePpuRam(byte data) // 0x2007 write
+        {
+            var address = _addressRegister.Get();
+
+            if (address < 0x2000) // write to chr rom
+            {
+                throw new Exception("attempt to write to chr rom");
+            }
+
+            if (address is >= 0x2000 and < 0x3000) // write to vRam (name table)
+            {
+                //var addr = MirrorVRamAddress(address);
+                VRam.Write(address, data);
+            }
+            else if (address is >= 0x3000 and < 0x3F00) // write to unused space
+            {
+                throw new Exception("attempt to write free space");
+            }
+            else if (address is >= 0x3F00 and < 0x4000) // write to palette
+            {
+                // add mirroring
+                PaletteTable[address - 0x3F00] = data;
+            }
+            else // write to outside boundary
+            {
+                throw new Exception("unexpected access to mirrored space");
+            }
+
+            IncrementVRamAddress();
+        }
+    }
 }
