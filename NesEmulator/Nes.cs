@@ -15,7 +15,7 @@ public class Nes
     private const string Title = "Nes Emulator";
 
     private RenderWindow Window { get; }
-    private Bus Bus { get; } = new();
+    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/pacman.nes"));
 
     public Nes()
     {
@@ -59,11 +59,11 @@ public class Nes
 
         Bus.DrawFrame += (_, _) =>
         {
-            engine.Render(Bus.Ppu, frame, colors);
+            engine.Render(Bus.Ppu, Bus.Cartridge ,frame, colors);
             screen.Texture.Update(frame);
         };
 
-        
+
         while (Window.IsOpen)
         {
             Window.DispatchEvents();
@@ -104,7 +104,7 @@ public class Nes
     private void UpdateFrameData(ref byte[] frameData)
     {
         var pixelIndex = 0;
-        for (uint i = 0x0200; i < 0x0600; i++)
+        for (ushort i = 0x0200; i < 0x0600; i++)
         {
             var color = GetColor(Bus.Read(i));
 
@@ -137,11 +137,11 @@ public class Nes
         const uint textureHeight = 240u;
 
         var texture = new Texture(textureWidth, textureHeight);
-        var chrRom = new Rom("NesRoms/pacman.nes").ChrRom;
+        var chrRom = NesFileLoader.LoadNesFile("NesRoms/pacman.nes").ChrRom;
         var frame = new Sprite(texture);
 
         // var frameData = ShowTile(ref chrRom, 0, 0);
-        var frameData = ShowTiles(ref chrRom);
+        var frameData = ShowTiles(chrRom);
         texture.Update(frameData);
 
         frame.Scale = new Vector2f(8, 8);
@@ -155,7 +155,7 @@ public class Nes
         }
     }
 
-    private Frame ShowTiles(ref byte[] chrRom)
+    private Frame ShowTiles(ReadOnlyMemory<byte> chrRom)
     {
         var frame = new Frame();
         var colors = new Colors();
@@ -165,7 +165,7 @@ public class Nes
             for (var tile = 0; tile < 256; tile++)
             {
                 var tileStartIndex = bank * 0x1000 + tile * 16;
-                var tileData = chrRom.AsSpan().Slice(tileStartIndex, 16);
+                var tileData = chrRom.Span.Slice(tileStartIndex, 16);
 
                 for (var y = 0; y < 8; y++) // iterate through rows
                 {

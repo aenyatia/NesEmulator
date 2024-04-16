@@ -1,23 +1,24 @@
-﻿using NesEmulator.Core.PpuModule;
+﻿using NesEmulator.Core.CartridgeModule;
+using NesEmulator.Core.PpuModule;
 
 namespace NesEmulator.Render;
 
 public class Engine
 {
-    public void Render(Ppu ppu, Frame frame, Colors colors)
+    public void Render(Ppu ppu, Cartridge cartridge, Frame frame, Colors colors)
     {
         // draw background
         var bank = ppu.ControlRegister.BackgroundPatternTableAddress();
 
-        for (var i = 0; i < 960; i++)
+        for (ushort i = 0; i < 960; i++)
         {
-            var tile = ppu.VRam[i];
+            var tile = ppu.VRam.Read(i);
             var tileX = i % 32;
             var tileY = i / 32;
 
-            var tileData = ppu.ChrRom.AsSpan().Slice((int)(bank + tile * 16), 16);
+            var tileData = cartridge.ChrRom.Slice((int)(bank + tile * 16), 16).Span;
+            // var tileData = ppu.ChrRom.Span.Slice((int)(bank + tile * 16), 16);
             var palette = BackgroundPalette(ppu, tileX, tileY);
-
             for (var y = 0; y < 8; y++) // iterate through rows
             {
                 var upper = tileData[y];
@@ -60,7 +61,7 @@ public class Engine
             var spritePalette = SpritePalette(ppu, (byte)paletteIndex);
 
             var bankSprite = ppu.ControlRegister.SpritePatternTableAddress();
-            var tile = ppu.ChrRom.AsSpan().Slice((int)(bankSprite + tileIndex * 16), 16);
+            var tile = cartridge.ChrRom.Span.Slice((int)(bankSprite + tileIndex * 16), 16);
 
             for (var y = 0; y < 8; y++) // iterate through rows
             {
@@ -126,7 +127,7 @@ public class Engine
     private byte[] BackgroundPalette(Ppu ppu, int tileColumn, int tileRow)
     {
         var attributeTable = tileRow / 4 * 8 + tileColumn / 4;
-        var attributeByte = ppu.VRam[0x3c0 + attributeTable];
+        var attributeByte = ppu.VRam.Read((ushort)(0x3c0 + attributeTable));
 
         var paletteIndex = (tileColumn % 4 / 2, tileRow % 4 / 2);
 
