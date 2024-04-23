@@ -148,8 +148,8 @@ public sealed class Cpu
         _address = 0x0000;
         _relAddress = 0x00;
 
-        _cycles = 8;
-        Cycles += 8;
+        _cycles = 7; // ??? 7 or 8
+        Cycles += 7;
     }
 
     public void Irq()
