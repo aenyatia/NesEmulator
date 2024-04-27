@@ -18,6 +18,9 @@ public class Bus
         Cpu = new Cpu(this);
         Ppu = new Ppu(cartridge);
         Cartridge = cartridge;
+        
+        Cpu.Reset();
+        Ppu.Tick(3 * 7);
     }
 
     public byte Read(ushort address)

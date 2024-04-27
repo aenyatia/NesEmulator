@@ -15,7 +15,7 @@ public class Nes
     private const string Title = "Nes Emulator";
 
     private RenderWindow Window { get; }
-    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/pacman.nes"));
+    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/nestest.nes"));
 
     public Nes()
     {
