@@ -20,7 +20,7 @@ public class Cartridge(Header header, byte[] prgRom, byte[] chrRom)
 
     public byte ReadChrRom(ushort address) // ppu [0x0000 - 0x2000]
     {
-        if (address < 0x8000)
+        if (address > 0x1FFF)
             throw new Exception("address out of range");
 
         return chrRom[address];

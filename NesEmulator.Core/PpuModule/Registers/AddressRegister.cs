@@ -2,69 +2,64 @@
 
 public class AddressRegister
 {
-    private byte _hi;
-    private byte _lo;
-    private bool _hiPtr;
+    private byte _hiByte;
+    private byte _loByte;
+    private bool _isHiByte = true;
+
+    public ushort Address
+    {
+        get => (ushort)((_hiByte << 8) | _loByte);
+        private set
+        {
+            _hiByte = (byte)(value >> 8);
+            _loByte = (byte)(value & 0xFF);
+        }
+    }
 
     public void Update(byte data)
     {
-        if (_hiPtr)
+        switch (_isHiByte)
         {
-            _hi = data;
-        }
-
-        if (!_hiPtr)
-        {
-            _lo = data;
+            case true:
+                _hiByte = data;
+                break;
+            case false:
+                _loByte = data;
+                break;
         }
 
         // mirror ???
-        var address = Get();
-        if (address > 0x3FFF)
+        if (Address > 0x3FFF)
         {
-            address &= 0b0011_1111_1111_1111;
-            Set((ushort)address);
+            Address &= 0b0011_1111_1111_1111;
         }
 
-        _hiPtr = !_hiPtr;
+        _isHiByte = !_isHiByte;
     }
 
     public void Increment(byte value)
     {
-        var lo = _lo + value;
+        var lo = _loByte + value;
 
-        if (lo > 255)
+        if (lo > 0xFF)
         {
-            _hi++;
-            _lo = (byte)(_lo + value);
+            _hiByte++;
+            _loByte = (byte)(_loByte + value);
         }
         else
         {
-            _lo += value;
+            _loByte += value;
         }
 
         // mirror ???
-        var address = Get();
-        if (address > 0x3FFF)
+        if (Address > 0x3FFF)
         {
-            address &= 0b0011_1111_1111_1111;
-            Set((ushort)address);
+            Address &= 0b0011_1111_1111_1111;
         }
-
-        // mirror???
     }
 
     public void ResetLatch()
     {
-        _hiPtr = true;
-    }
-
-    public ushort Get()
-        => (ushort)((_hi << 8) | _lo);
-
-    private void Set(ushort address)
-    {
-        _hi = (byte)(address >> 8);
-        _lo = (byte)(address & 0xFF);
+        _isHiByte = true;
     }
 }

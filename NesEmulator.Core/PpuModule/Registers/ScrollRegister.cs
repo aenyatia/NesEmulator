@@ -8,14 +8,14 @@ public class ScrollRegister
 
     public void Write(byte data)
     {
-        if (!_latch)
+        switch (_latch)
         {
-            _scrollX = data;
-        }
-
-        if (_latch)
-        {
-            _scrollY = data;
+            case false:
+                _scrollX = data;
+                break;
+            case true:
+                _scrollY = data;
+                break;
         }
 
         _latch = !_latch;

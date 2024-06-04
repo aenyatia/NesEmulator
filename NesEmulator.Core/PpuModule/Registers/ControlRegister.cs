@@ -72,8 +72,8 @@ public class ControlRegister
         var value = _controlRegister & 0b0010_0000;
 
         return value == 0
-            ? 0u // 8x8 pixels 
-            : 1u; // 8x16 pixels
+            ? 8u // 8x8 pixels 
+            : 16u; // 8x16 pixels
     }
 
     public uint PpuMasterSlaveSelect()
@@ -85,12 +85,12 @@ public class ControlRegister
             : 1u;
     }
 
-    public uint GenerateVBlancNmi()
+    public bool GenerateVBlancNmi()
     {
         var value = _controlRegister & 0b1000_0000;
 
         return value == 0
-            ? 0u // off
-            : 1u; // on
+            ? false // off
+            : true; // on
     }
 }

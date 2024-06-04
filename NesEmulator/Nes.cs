@@ -15,7 +15,7 @@ public class Nes
     private const string Title = "Nes Emulator";
 
     private RenderWindow Window { get; }
-    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/nestest.nes"));
+    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/pacman.nes"));
 
     public Nes()
     {
@@ -42,19 +42,14 @@ public class Nes
         Window.SetFramerateLimit(Fps);
     }
 
-    public void Load()
-    {
-        Bus.Cpu.Reset();
-    }
-
     public void Run()
     {
         var texture = new Texture(256, 240);
         var screen = new Sprite(texture);
         screen.Scale = new Vector2f(4, 4);
 
-        var frame = new Frame();
         var engine = new Engine();
+        var frame = new Frame();
         var colors = new Colors();
 
         Bus.DrawFrame += (_, _) =>
@@ -62,7 +57,6 @@ public class Nes
             engine.Render(Bus.Ppu, Bus.Cartridge ,frame, colors);
             screen.Texture.Update(frame);
         };
-
 
         while (Window.IsOpen)
         {

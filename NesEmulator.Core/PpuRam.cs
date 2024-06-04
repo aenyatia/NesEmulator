@@ -8,7 +8,7 @@ public class PpuRam(Mirroring mirroring)
 
     public byte Read(ushort address)
     {
-        address = MirrorVRamAddress(address);
+        // address = MirrorVRamAddress(address);
 
         return _memory[address];
     }
@@ -22,6 +22,8 @@ public class PpuRam(Mirroring mirroring)
 
     private ushort MirrorVRamAddress(ushort address)
     {
+        address &= 0b1011_1111_1111_1111;
+        
         // address from 0x2000 to 0x2FFF 4kB
         address -= 0x2000; // 0x0000 - 0x0FFF
 

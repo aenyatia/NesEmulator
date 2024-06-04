@@ -11,8 +11,6 @@ public class CpuRam
 
         address = MirrorRamAddress(address);
 
-        address &= 0x07FF;
-
         return _memory[address];
     }
 

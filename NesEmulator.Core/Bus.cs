@@ -18,7 +18,7 @@ public class Bus
         Cpu = new Cpu(this);
         Ppu = new Ppu(cartridge);
         Cartridge = cartridge;
-        
+
         Cpu.Reset();
         Ppu.Tick(3 * 7);
     }
@@ -29,8 +29,9 @@ public class Bus
         {
             <= 0x1FFF => CpuRam.Read(address),
             <= 0x3FFF => Ppu.Read(address),
-            >= 0x8000 => Cartridge.ReadPrgRom(address),
-            _ => throw new Exception("invalid address")
+            <= 0x4017 => 0,
+            <= 0x7FFF => throw new Exception("read from: io registers, eROM, sRAM"),
+            <= 0xFFFF => Cartridge.ReadPrgRom(address),
         };
     }
 
@@ -44,10 +45,11 @@ public class Bus
             case <= 0x3FFF:
                 Ppu.Write(address, data);
                 break;
-            case 0x4014:
-                Ppu.WriteToODma(data);
+            case <= 0x4017:
                 break;
-            case >= 0x8000:
+            case <= 0x7FFF:
+                throw new Exception("write to: io registers, eROM, sRAM");
+            case <= 0xFFFF:
                 throw new Exception("cannot write to prg rom");
         }
     }
@@ -55,13 +57,7 @@ public class Bus
     // ???
     private bool PollNmiStatus()
     {
-        if (Ppu.PollNmiInterrupt() == 0)
-            return false;
-
-        if (Ppu.PollNmiInterrupt() == 1)
-            return true;
-
-        throw new Exception("invalid nmi state");
+        return Ppu.PollNmiInterrupt();
     }
 
     public void Tick()
