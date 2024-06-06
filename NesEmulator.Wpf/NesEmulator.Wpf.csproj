@@ -13,4 +13,18 @@
       <ProjectReference Include="..\NesEmulator.Core\NesEmulator.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Page Update="UserControls\TileViewer.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Resources\horo.jpeg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

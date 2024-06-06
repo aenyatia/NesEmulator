@@ -3,21 +3,30 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:NesEmulator.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="800"
-        KeyDown="MainWindow_OnKeyDown">
+        Title="Nes Emulator" Height="800" Width="800">
+
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="100"/>
-        </Grid.ColumnDefinitions>
-        <Image Name="image"
-               Grid.Column="0"
-               Stretch="Fill"
-               RenderOptions.BitmapScalingMode="NearestNeighbor"
-               RenderOptions.EdgeMode="Aliased">
-        </Image>
-        <Button Grid.Column="1" Click="ButtonBase_OnClick">Start</Button>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid Row="0">
+            <StackPanel>
+                <Button Content="Sprites" Click="ButtonSprites_OnClick"></Button>
+                <Button Content="Background" Click="ButtonBackground_OnClick"></Button>
+            </StackPanel>
+        </Grid>
+
+        <Grid Row="1">
+            <ContentControl Name="Content" />
+            <!-- <uc:TileViewer -->
+            <!--     HorizontalAlignment="Center" -->
+            <!--     VerticalAlignment="Center" -->
+            <!--     Padding="10"> -->
+            <!-- </uc:TileViewer> -->
+        </Grid>
     </Grid>
+    
 </Window>
