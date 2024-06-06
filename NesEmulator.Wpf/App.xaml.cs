@@ -1,5 +1,3 @@
-﻿using System.Windows;
+﻿namespace NesEmulator.Wpf;
 
-namespace NesEmulator.Wpf;
-
-public partial class App : Application;
+public partial class App;
