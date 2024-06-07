@@ -3,7 +3,7 @@ using NesEmulator.Core.PpuModule.Registers;
 
 namespace NesEmulator.Core.PpuModule;
 
-public class Ppu(Cartridge cartridge)
+public class Ppu(Cartridge cartridge, Bus bus)
 {
     public PpuRam VRam { get; } = new(cartridge.Header.Mirroring); // nametable 0x0000 - 0x1FFF 8kB
     public readonly byte[] PaletteTable = new byte[32]; // palette table 0x3F00 - 0x3F1F 32 bytes
@@ -14,9 +14,9 @@ public class Ppu(Cartridge cartridge)
     private readonly ScrollRegister _scrollRegister = new(); // 0x2005
     private readonly AddressRegister _addressRegister = new(); // 0x2006
 
-    //private byte _oamAddress; // 0x2003
-    //public readonly byte[] OamDataBuffer = new byte[256]; // internal oam 64 * 4 bytes 0x2004
-    // private byte _oamDma; // 0x2014
+    private byte _oamAddress; // 0x2003
+    public readonly byte[] OamDataBuffer = new byte[256]; // internal oam 64 * 4 bytes 0x2004
+    private byte _oamDma; // 0x2014
 
     private byte _internalDataBuffer;
 
@@ -84,7 +84,7 @@ public class Ppu(Cartridge cartridge)
             0x2001 => 0,
             0x2002 => ReadStatusRegister(),
             0x2003 => 0,
-            0x2004 => 0, // add oam
+            0x2004 => ReadOamData(),
             0x2005 => 0,
             0x2006 => 0,
             0x2007 => ReadPpuRam(),
@@ -117,8 +117,8 @@ public class Ppu(Cartridge cartridge)
             if (registerAddress is >= 0x2000 and < 0x3000) // read from vRam (name table)
             {
                 var data = _internalDataBuffer;
-                //var addr = MirrorVRamAddress(address);
-                _internalDataBuffer = VRam.Read(registerAddress);
+                var addr = VRam.MirrorVRamAddress(address);
+                _internalDataBuffer = VRam.Read(addr);
                 return data;
             }
 
@@ -148,6 +148,11 @@ public class Ppu(Cartridge cartridge)
 
             throw new Exception("unexpected access to mirrored space");
         }
+        
+        byte ReadOamData()
+        {
+            return OamDataBuffer[_oamAddress];
+        }
     }
 
     public void Write(ushort address, byte data)
@@ -174,11 +179,11 @@ public class Ppu(Cartridge cartridge)
                 throw new Exception("status");
             // write oam address
             case 0x2003:
-                //WriteToOamAddress();
+                WriteToOamAddress();
                 break;
             // write oam data
             case 0x2004:
-                //WriteToOamData();
+                WriteToOamData();
                 break;
             // write scroll
             case 0x2005:
@@ -212,16 +217,16 @@ public class Ppu(Cartridge cartridge)
             _maskRegister.Update(data);
         }
 
-        // void WriteToOamAddress() // 0x2003 write-only
-        // {
-        //     _oamAddress = data;
-        // }
-        //
-        // void WriteToOamData() // 0x2004 write
-        // {
-        //     OamDataBuffer[_oamAddress] = data;
-        //     _oamAddress += 1;
-        // }
+        void WriteToOamAddress() // 0x2003 write-only
+        {
+            _oamAddress = data;
+        }
+        
+        void WriteToOamData() // 0x2004 write
+        {
+            OamDataBuffer[_oamAddress] = data;
+            _oamAddress += 1;
+        }
 
         void WriteToPpuScroll() // 0x2005 write-only
         {
@@ -266,6 +271,21 @@ public class Ppu(Cartridge cartridge)
             }
 
             IncrementVRamAddress();
+        }
+    }
+
+    public void WriteOamData(byte data)
+    {
+        var buffer = new byte[256];
+        var hi = (ushort)(data << 8);
+
+        for (var i = 0; i < 256; i++)
+            buffer[i] = bus.Read((ushort)(hi + i));
+
+        foreach (var x in buffer)
+        {
+            OamDataBuffer[_oamAddress] = x;
+            _oamAddress += 1;
         }
     }
 }

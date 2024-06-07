@@ -1,4 +1,5 @@
 ﻿using NesEmulator.Core.CartridgeModule;
+using NesEmulator.Core.ControllerModule;
 using NesEmulator.Core.CpuModule;
 using NesEmulator.Core.PpuModule;
 
@@ -12,12 +13,14 @@ public class Bus
     public Ppu Ppu { get; }
     private CpuRam CpuRam { get; } = new();
     public Cartridge Cartridge { get; }
+    public Controller Controller { get; }
 
     public Bus(Cartridge cartridge)
     {
         Cpu = new Cpu(this);
-        Ppu = new Ppu(cartridge);
+        Ppu = new Ppu(cartridge, this);
         Cartridge = cartridge;
+        Controller = new Controller();
 
         Cpu.Reset();
         Ppu.Tick(3 * 7);
@@ -29,6 +32,8 @@ public class Bus
         {
             <= 0x1FFF => CpuRam.Read(address),
             <= 0x3FFF => Ppu.Read(address),
+            <= 0x4015 => 0,
+            <= 0x4016 => Controller.ReadControllerOutput(),
             <= 0x4017 => 0,
             <= 0x7FFF => throw new Exception("read from: io registers, eROM, sRAM"),
             <= 0xFFFF => Cartridge.ReadPrgRom(address),
@@ -44,6 +49,14 @@ public class Bus
                 break;
             case <= 0x3FFF:
                 Ppu.Write(address, data);
+                break;
+            case 0x4014:
+                Ppu.WriteOamData(data);
+                break;
+            case <= 0x4015:
+                break;
+            case <= 0x4016:
+                Controller.WriteControllerInput(data);
                 break;
             case <= 0x4017:
                 break;

@@ -20,7 +20,7 @@ public class PpuRam(Mirroring mirroring)
         _memory[address] = data;
     }
 
-    private ushort MirrorVRamAddress(ushort address)
+    public ushort MirrorVRamAddress(ushort address)
     {
         address &= 0b1011_1111_1111_1111;
         
@@ -55,12 +55,12 @@ public class PpuRam(Mirroring mirroring)
         {
             // inx == 0 or 1 nothing to do
 
-            if (address == 2)
+            if (nameTableIndex == 2)
             {
                 address -= 0x800;
             }
 
-            if (address == 3)
+            if (nameTableIndex == 3)
             {
                 address -= 0x800;
             }

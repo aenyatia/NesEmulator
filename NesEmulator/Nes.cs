@@ -1,5 +1,6 @@
 ﻿using NesEmulator.Core;
 using NesEmulator.Core.CartridgeModule;
+using NesEmulator.Core.ControllerModule;
 using NesEmulator.Render;
 using SFML.Graphics;
 using SFML.System;
@@ -15,7 +16,19 @@ public class Nes
     private const string Title = "Nes Emulator";
 
     private RenderWindow Window { get; }
-    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/pacman.nes"));
+    private Bus Bus { get; } = new(NesFileLoader.LoadNesFile("NesRoms/mario.nes"));
+
+    private Dictionary<Keyboard.Key, ControllerButton> _keyMap = new()
+    {
+        { Keyboard.Key.Up, ControllerButton.Up },
+        { Keyboard.Key.Down, ControllerButton.Down },
+        { Keyboard.Key.Left, ControllerButton.Left },
+        { Keyboard.Key.Right, ControllerButton.Right },
+        { Keyboard.Key.Z, ControllerButton.ButtonA },
+        { Keyboard.Key.X, ControllerButton.ButtonB },
+        { Keyboard.Key.Space, ControllerButton.Select },
+        { Keyboard.Key.Enter, ControllerButton.Start },
+    };
 
     public Nes()
     {
@@ -23,20 +36,16 @@ public class Nes
         Window.Closed += (_, _) => Window.Close();
         Window.KeyPressed += (_, args) =>
         {
-            switch (args.Code)
+            if (_keyMap.TryGetValue(args.Code, out var controllerButton))
             {
-                case Keyboard.Key.W:
-                    Bus.Write(0xFF, 0x77);
-                    break;
-                case Keyboard.Key.S:
-                    Bus.Write(0xFF, 0x73);
-                    break;
-                case Keyboard.Key.A:
-                    Bus.Write(0xFF, 0x61);
-                    break;
-                case Keyboard.Key.D:
-                    Bus.Write(0xFF, 0x64);
-                    break;
+                Bus.Controller.SetButtonState(controllerButton, true);
+            }
+        };
+        Window.KeyReleased += (_, args) =>
+        {
+            if (_keyMap.TryGetValue(args.Code, out var controllerButton))
+            {
+                Bus.Controller.SetButtonState(controllerButton, false);
             }
         };
         Window.SetFramerateLimit(Fps);
@@ -54,7 +63,7 @@ public class Nes
 
         Bus.DrawFrame += (_, _) =>
         {
-            engine.Render(Bus.Ppu, Bus.Cartridge ,frame, colors);
+            engine.Render(Bus.Ppu, Bus.Cartridge, frame, colors);
             screen.Texture.Update(frame);
         };
 
@@ -65,7 +74,7 @@ public class Nes
             Window.Draw(screen);
             Window.Display();
 
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 200; i++)
                 Bus.Tick();
         }
     }
@@ -131,7 +140,7 @@ public class Nes
         const uint textureHeight = 240u;
 
         var texture = new Texture(textureWidth, textureHeight);
-        var chrRom = NesFileLoader.LoadNesFile("NesRoms/pacman.nes").ChrRom;
+        var chrRom = NesFileLoader.LoadNesFile("NesRoms/mario.nes").ChrRom;
         var frame = new Sprite(texture);
 
         // var frameData = ShowTile(ref chrRom, 0, 0);
