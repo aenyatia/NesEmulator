@@ -3,7 +3,7 @@
 public class Cartridge(Header header, byte[] prgRom, byte[] chrRom)
 {
     public Header Header { get; } = header;
-    public ReadOnlyMemory<byte> ChrRom { get; } = new(chrRom);
+    public byte[] ChrRom { get; } = chrRom;
 
     public byte ReadPrgRom(ushort address) // cpu [0x8000 - 0xFFFF]
     {
