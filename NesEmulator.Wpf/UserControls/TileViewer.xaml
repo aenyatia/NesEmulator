@@ -6,8 +6,6 @@
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="600">
 
-    <!-- <Image RenderOptions.BitmapScalingMode="NearestNeighbor" Name="Tile"></Image> -->
-
     <Grid Name="GridContainer">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
@@ -46,4 +44,5 @@
             <RowDefinition />
         </Grid.RowDefinitions>
     </Grid>
+
 </UserControl>

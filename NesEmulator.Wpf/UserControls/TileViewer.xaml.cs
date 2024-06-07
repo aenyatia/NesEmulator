@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -7,16 +6,8 @@ using NesEmulator.Core.CartridgeModule;
 
 namespace NesEmulator.Wpf.UserControls;
 
-public sealed partial class TileViewer
+public partial class TileViewer
 {
-    private readonly Color[] _colors =
-    [
-        Color.FromRgb(146, 144, 255),
-        Color.FromRgb(181, 49, 32),
-        Color.FromRgb(234, 158, 34),
-        Color.FromRgb(107, 109, 0)
-    ];
-
     public TileViewer(int offset)
     {
         InitializeComponent();
@@ -42,8 +33,7 @@ public sealed partial class TileViewer
                 var border = new Border
                 {
                     BorderBrush = Brushes.White,
-                    BorderThickness = new Thickness(1),
-                    // Margin = new Thickness(0.25)
+                    BorderThickness = new Thickness(1)
                 };
 
                 RenderOptions.SetBitmapScalingMode(tile, BitmapScalingMode.NearestNeighbor);
@@ -92,15 +82,11 @@ public sealed partial class TileViewer
         return tilePixels;
     }
 
-    private static BitmapImage LoadImage()
-    {
-        const string relativePath = "Resources/horo.jpeg";
-        var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        var path = Path.Combine(baseDirectory, relativePath);
-
-        var uri = new Uri(path);
-        var bitmap = new BitmapImage(uri);
-
-        return bitmap;
-    }
+    private readonly Color[] _colors =
+    [
+        Color.FromRgb(146, 144, 255),
+        Color.FromRgb(181, 49, 32),
+        Color.FromRgb(234, 158, 34),
+        Color.FromRgb(107, 109, 0)
+    ];
 }
