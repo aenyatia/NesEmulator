@@ -13,20 +13,20 @@
         </Grid.RowDefinitions>
 
         <Grid Row="0">
-            <StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <Button Content="Sprites" Click="ButtonSprites_OnClick"></Button>
                 <Button Content="Background" Click="ButtonBackground_OnClick"></Button>
+                <Button Content="Emulator" Click="ButtonEmulator_OnClick"></Button>
             </StackPanel>
         </Grid>
 
         <Grid Row="1">
-            <ContentControl Name="Content" />
-            <!-- <uc:TileViewer -->
-            <!--     HorizontalAlignment="Center" -->
-            <!--     VerticalAlignment="Center" -->
-            <!--     Padding="10"> -->
-            <!-- </uc:TileViewer> -->
+            <ContentControl
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Padding="10"
+                Name="Content" />
         </Grid>
     </Grid>
-    
+
 </Window>

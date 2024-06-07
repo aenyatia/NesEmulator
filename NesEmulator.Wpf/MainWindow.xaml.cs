@@ -5,6 +5,14 @@ namespace NesEmulator.Wpf;
 
 public partial class MainWindow
 {
+    private TileViewer? _sprites;
+    private TileViewer? _background;
+    private GameViewer? _gameViewer;
+
+    private TileViewer SpritesTile => _sprites ??= new TileViewer(0x0000);
+    private TileViewer BackgroundTile => _background ??= new TileViewer(0x1000);
+    private GameViewer GameViewer => _gameViewer ??= new GameViewer();
+
     public MainWindow()
     {
         InitializeComponent();
@@ -12,24 +20,16 @@ public partial class MainWindow
 
     private void ButtonSprites_OnClick(object sender, RoutedEventArgs e)
     {
-        var sprites = new TileViewer(0x0000)
-        {
-            Padding = new Thickness(10),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        Content.Content = sprites;
+        Content.Content = SpritesTile;
     }
-
 
     private void ButtonBackground_OnClick(object sender, RoutedEventArgs e)
     {
-        var background = new TileViewer(0x1000)
-        {
-            Padding = new Thickness(10),
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-        Content.Content = background;
+        Content.Content = BackgroundTile;
+    }
+
+    private void ButtonEmulator_OnClick(object sender, RoutedEventArgs e)
+    {
+        Content.Content = GameViewer;
     }
 }
