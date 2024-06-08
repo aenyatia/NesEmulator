@@ -1,28 +1,24 @@
-﻿namespace NesEmulator.Core.CartridgeModule;
+﻿using NesEmulator.Core.CartridgeModule.Mappers;
 
-public class Cartridge(Header header, byte[] prgRom, byte[] chrRom)
+namespace NesEmulator.Core.CartridgeModule;
+
+public class Cartridge(Header header, IMapper mapper, byte[] prgRom, byte[] chrRom)
 {
     public Header Header { get; } = header;
     public byte[] ChrRom { get; } = chrRom;
+    public Mirroring Mirroring => Header.Mirroring;
 
-    public byte ReadPrgRom(ushort address) // cpu [0x8000 - 0xFFFF]
+    public byte ReadPrgRom(ushort address)
     {
-        if (address < 0x8000)
-            throw new Exception("address out of range");
-
-        address -= 0x8000;
-
-        if (prgRom.Length == 0x4000 && address >= 0x4000)
-            address &= 0x3FFF;
+        address = mapper.MapPrgRom(address);
 
         return prgRom[address];
     }
 
-    public byte ReadChrRom(ushort address) // ppu [0x0000 - 0x2000]
+    public byte ReadChrRom(ushort address)
     {
-        if (address > 0x1FFF)
-            throw new Exception("address out of range");
+        address = mapper.MapChrRom(address);
 
-        return chrRom[address];
+        return ChrRom[address];
     }
 }
