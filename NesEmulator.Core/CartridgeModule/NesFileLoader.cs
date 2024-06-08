@@ -1,4 +1,6 @@
-﻿namespace NesEmulator.Core.CartridgeModule;
+﻿using NesEmulator.Core.CartridgeModule.Mappers;
+
+namespace NesEmulator.Core.CartridgeModule;
 
 public static class NesFileLoader
 {
@@ -20,12 +22,14 @@ public static class NesFileLoader
         if (header.Mapper != 0)
             throw new Exception("invalid mapper");
 
+        var mapper = new NRomMapper(header.ChrRomBanksCount, header.PrgRomBanksCount);
+
         fileStream.Seek(16 + (header.HasTrainer ? 512 : 0), SeekOrigin.Begin);
 
         var prgRom = LoadPgrRom(reader, header.PrgRomBanksCount * PrgRomBankSize);
         var chrRom = LoadChrRom(reader, header.ChrRomBanksCount * ChrRomBankSize);
 
-        return new Cartridge(header, prgRom, chrRom);
+        return new Cartridge(header, mapper, prgRom, chrRom);
     }
 
     private static Header LoadHeader(BinaryReader reader)

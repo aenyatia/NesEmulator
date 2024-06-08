@@ -11,32 +11,33 @@ public class Bus
 
     public Cpu Cpu { get; }
     public Ppu Ppu { get; }
-    private CpuRam CpuRam { get; } = new();
+    private Ram Ram { get; }
     public Cartridge Cartridge { get; }
     public Controller Controller { get; }
+
+    public int ClockCounter { get; private set; }
 
     public Bus(Cartridge cartridge)
     {
         Cpu = new Cpu(this);
         Ppu = new Ppu(cartridge, this);
+        Ram = new Ram();
         Cartridge = cartridge;
         Controller = new Controller();
-
-        Cpu.Reset();
-        Ppu.Tick(3 * 7);
     }
 
     public byte Read(ushort address)
     {
         return address switch
         {
-            <= 0x1FFF => CpuRam.Read(address),
-            <= 0x3FFF => Ppu.Read(address),
-            <= 0x4015 => 0,
-            <= 0x4016 => Controller.ReadControllerOutput(),
-            <= 0x4017 => 0,
-            <= 0x7FFF => throw new Exception("read from: io registers, eROM, sRAM"),
-            <= 0xFFFF => Cartridge.ReadPrgRom(address),
+            >= 0x0000 and <= 0x1FFF => Ram.Read(address),
+            >= 0x2000 and <= 0x3FFF => Ppu.Read(address),
+            >= 0x4000 and <= 0x4015 => 0, // unimplemented apu
+            0x4016 => Controller.Read(),
+            0x4017 => 0, // unimplemented controller 2
+            >= 0x4018 and <= 0x401F => throw new Exception("apu and i/o functionality disabled"),
+            >= 0x4020 and <= 0x7FFF => throw new Exception("unimplemented eRom, sRAM"),
+            >= 0x8000 and <= 0xFFFF => Cartridge.ReadPrgRom(address)
         };
     }
 
@@ -44,38 +45,50 @@ public class Bus
     {
         switch (address)
         {
-            case <= 0x1FFF:
-                CpuRam.Write(address, data);
+            case >= 0x0000 and <= 0x1FFF:
+                Ram.Write(address, data);
                 break;
-            case <= 0x3FFF:
+
+            case >= 0x2000 and <= 0x3FFF:
                 Ppu.Write(address, data);
                 break;
-            case 0x4014:
-                Ppu.WriteOamData(data);
+
+            case >= 0x4000 and <= 0x4015 and not 0x4014:
+                // unimplemented apu
                 break;
-            case <= 0x4015:
+
+            case 0x4014: // move implementation here ???
                 break;
-            case <= 0x4016:
-                Controller.WriteControllerInput(data);
+
+            case 0x4016:
+                Controller.Write(data);
                 break;
+
             case <= 0x4017:
+                // unimplemented controller 2
                 break;
-            case <= 0x7FFF:
-                throw new Exception("write to: io registers, eROM, sRAM");
-            case <= 0xFFFF:
+
+            case >= 0x4018 and <= 0x401F:
+                throw new Exception("apu and i/o functionality disabled");
+
+            case >= 0x4020 and <= 0x7FFF:
+                throw new Exception("unimplemented eRom, sRAM");
+
+            case >= 0x8000 and <= 0xFFFF:
                 throw new Exception("cannot write to prg rom");
         }
     }
-
-    // ???
-    private bool PollNmiStatus()
+    
+    public void Reset()
     {
-        return Ppu.PollNmiInterrupt();
+        Cpu.Reset();
+
+        ClockCounter = 0;
     }
 
-    public void Tick()
+    public void Clock()
     {
-        if (PollNmiStatus())
+        if (Ppu.PollNmiInterrupt())
         {
             Cpu.Nmi();
         }
@@ -86,5 +99,7 @@ public class Bus
         {
             DrawFrame?.Invoke(this, EventArgs.Empty);
         }
+
+        ClockCounter += 1;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace NesEmulator.Core;
 
-public class PpuRam(Mirroring mirroring)
+public class VRam(Mirroring mirroring)
 {
     private readonly byte[] _memory = new byte[2048];
 

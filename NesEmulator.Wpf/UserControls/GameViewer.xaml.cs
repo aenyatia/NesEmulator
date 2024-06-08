@@ -28,6 +28,7 @@ public partial class GameViewer
         Bitmap = new WriteableBitmap(ScreenWidth, ScreenHeight, 96, 96, PixelFormats.Bgr32, null);
 
         _bus.DrawFrame += BusOnDrawFrame;
+        _bus.Reset();
     }
 
     private void BusOnDrawFrame(object? sender, EventArgs e)
@@ -162,11 +163,12 @@ public partial class GameViewer
 
         if (_x)
         {
+            
             Task.Run(() =>
             {
                 while (_x)
                 {
-                    _bus.Tick();
+                    _bus.Clock();
                 }
             });
         }

@@ -75,7 +75,7 @@ public class Nes
             Window.Display();
 
             for (var i = 0; i < 200; i++)
-                Bus.Tick();
+                Bus.Clock();
         }
     }
 
