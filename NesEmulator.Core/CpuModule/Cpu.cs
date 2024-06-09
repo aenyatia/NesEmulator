@@ -1147,12 +1147,12 @@ public sealed class Cpu
 
     private void WriteByte(uint address, uint value)
     {
-        _bus.Write((ushort)address, (byte)value);
+        _bus.WriteCpu((ushort)address, (byte)value);
     }
 
     private uint ReadByte(uint address)
     {
-        return _bus.Read((ushort)address);
+        return _bus.CpuRead((ushort)address);
     }
 
     private uint ReadWord(uint address)
@@ -1165,7 +1165,7 @@ public sealed class Cpu
 
     private uint NextByte()
     {
-        return _bus.Read((ushort)PC++);
+        return _bus.CpuRead((ushort)PC++);
     }
 
     private uint NextWord()

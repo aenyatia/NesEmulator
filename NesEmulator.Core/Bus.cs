@@ -1,5 +1,4 @@
 ﻿using NesEmulator.Core.CartridgeModule;
-using NesEmulator.Core.ControllerModule;
 using NesEmulator.Core.CpuModule;
 using NesEmulator.Core.PpuModule;
 
@@ -7,99 +6,87 @@ namespace NesEmulator.Core;
 
 public class Bus
 {
-    public event EventHandler? DrawFrame;
-
-    public Cpu Cpu { get; }
-    public Ppu Ppu { get; }
-    private Ram Ram { get; }
-    public Cartridge Cartridge { get; }
-    public Controller Controller { get; }
-
-    public int ClockCounter { get; private set; }
-
     public Bus(Cartridge cartridge)
     {
         Cpu = new Cpu(this);
-        Ppu = new Ppu(cartridge, this);
-        Ram = new Ram();
+        Ppu = new Ppu(cartridge);
         Cartridge = cartridge;
-        Controller = new Controller();
+        Ram = new Ram();
     }
 
-    public byte Read(ushort address)
+    public Cpu Cpu { get; }
+    public Ppu Ppu { get; }
+    public Ram Ram { get; }
+    public Cartridge Cartridge { get; }
+
+    public uint SystemClockCounter { get; private set; }
+
+    public byte CpuRead(ushort address)
     {
-        return address switch
+        byte data = 0x00;
+
+        if (Cartridge.CpuRead(address, ref data))
         {
-            >= 0x0000 and <= 0x1FFF => Ram.Read(address),
-            >= 0x2000 and <= 0x3FFF => Ppu.Read(address),
-            >= 0x4000 and <= 0x4015 => 0, // unimplemented apu
-            0x4016 => Controller.Read(),
-            0x4017 => 0, // unimplemented controller 2
-            >= 0x4018 and <= 0x401F => throw new Exception("apu and i/o functionality disabled"),
-            >= 0x4020 and <= 0x7FFF => throw new Exception("unimplemented eRom, sRAM"),
-            >= 0x8000 and <= 0xFFFF => Cartridge.ReadPrgRom(address)
-        };
+        }
+        else if (address is >= 0x0000 and <= 0x1FFF)
+        {
+            data = Ram.CpuRead(address);
+        }
+        else if (address is >= 0x2000 and <= 0x3FFF)
+        {
+            data = Ppu.CpuRead(address);
+        }
+        else if (address is 0x4016 or 0x4017)
+        {
+            // controller
+        }
+
+        return data;
     }
 
-    public void Write(ushort address, byte data)
+    public void WriteCpu(ushort address, byte data)
     {
-        switch (address)
+        if (Cartridge.CpuWrite(address, data))
         {
-            case >= 0x0000 and <= 0x1FFF:
-                Ram.Write(address, data);
-                break;
-
-            case >= 0x2000 and <= 0x3FFF:
-                Ppu.Write(address, data);
-                break;
-
-            case >= 0x4000 and <= 0x4015 and not 0x4014:
-                // unimplemented apu
-                break;
-
-            case 0x4014: // move implementation here ???
-                break;
-
-            case 0x4016:
-                Controller.Write(data);
-                break;
-
-            case <= 0x4017:
-                // unimplemented controller 2
-                break;
-
-            case >= 0x4018 and <= 0x401F:
-                throw new Exception("apu and i/o functionality disabled");
-
-            case >= 0x4020 and <= 0x7FFF:
-                throw new Exception("unimplemented eRom, sRAM");
-
-            case >= 0x8000 and <= 0xFFFF:
-                throw new Exception("cannot write to prg rom");
+        }
+        else if (address is >= 0x0000 and <= 0x1FFF)
+        {
+            Ram.CpuWrite(address, data);
+        }
+        else if (address is >= 0x2000 and <= 0x3FFF)
+        {
+            Ppu.CpuWrite(address, data);
+        }
+        else if (address is 0x4016 or 0x4017)
+        {
+            // controller
         }
     }
-    
+
     public void Reset()
     {
         Cpu.Reset();
+        Ppu.Reset();
+        Cartridge.Reset();
 
-        ClockCounter = 0;
+        SystemClockCounter = 0;
     }
 
     public void Clock()
     {
-        if (Ppu.PollNmiInterrupt())
+        Ppu.Clock();
+
+        if (SystemClockCounter % 3 == 0)
         {
+            Cpu.Clock();
+        }
+
+        if (Ppu.Nmi)
+        {
+            Ppu.Nmi = false;
             Cpu.Nmi();
         }
 
-        var cycles = Cpu.ExecuteSingleInstruction();
-
-        if (Ppu.Tick(cycles * 3))
-        {
-            DrawFrame?.Invoke(this, EventArgs.Empty);
-        }
-
-        ClockCounter += 1;
+        SystemClockCounter += 1;
     }
 }

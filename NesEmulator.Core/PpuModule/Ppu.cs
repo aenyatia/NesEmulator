@@ -3,29 +3,187 @@ using NesEmulator.Core.PpuModule.Registers;
 
 namespace NesEmulator.Core.PpuModule;
 
-public class Ppu(Cartridge cartridge, Bus bus)
+public class Ppu(Cartridge cartridge)
 {
-    public readonly byte[] PaletteTable = new byte[32];
-
-    public readonly ControlRegister ControlRegister = new(); // 0x2000
+    // ppu registers
+    private readonly ControlRegister _controlRegister = new(); // 0x2000
     private readonly MaskRegister _maskRegister = new(); // 0x2001
     private readonly StatusRegister _statusRegister = new(); // 0x2002
+
     private readonly ScrollRegister _scrollRegister = new(); // 0x2005
     private readonly AddressRegister _addressRegister = new(); // 0x2006
 
-    public readonly VRam VRam = new(cartridge.Mirroring);
+    // vRam
+    private readonly VRam _vRam = new(cartridge.Mirroring);
 
-    public readonly byte[] OamDataBuffer = new byte[256]; // internal oam 64 * 4 bytes 0x2004
+    // palette table
+    private readonly byte[] _paletteTable = new byte[32];
 
-    private byte _internalDataBuffer;
-
-    private uint _scanline;
+    // pixel position
     private uint _cycles;
-    private bool _nmiInterrupt;
+    private uint _scanline;
 
-    public bool Tick(uint cycles)
+    // internal data
+    private byte _ppuDataBuffer;
+
+    public bool Nmi { get; set; }
+
+    public byte CpuRead(ushort address)
     {
-        _cycles += cycles;
+        if (address is < 0x2000 or > 0x3FFF) throw new ArgumentOutOfRangeException(nameof(address));
+
+        address &= 0x0007;
+
+        byte data = 0x00;
+
+        if (address == 0x0000)
+        {
+        }
+        else if (address == 0x0001)
+        {
+        }
+        else if (address == 0x0002)
+        {
+            data = _statusRegister.Value;
+
+            _statusRegister.ResetVerticalBlanc();
+            _addressRegister.ResetLatch();
+        }
+        else if (address == 0x0003)
+        {
+        }
+        else if (address == 0x0004)
+        {
+        }
+        else if (address == 0x0005)
+        {
+        }
+        else if (address == 0x0006)
+        {
+        }
+        else if (address == 0x0007)
+        {
+            data = _ppuDataBuffer;
+
+            _ppuDataBuffer = PpuRead(_addressRegister);
+
+            if (_addressRegister >= 0x3F00)
+            {
+                data = _ppuDataBuffer;
+            }
+
+            _addressRegister.Increment(_controlRegister.IncrementMode);
+        }
+
+        return data;
+    }
+
+    public void CpuWrite(ushort address, byte data)
+    {
+        if (address is < 0x2000 or > 0x3FFF) throw new ArgumentOutOfRangeException(nameof(address));
+
+        address &= 0x0007;
+
+        if (address == 0x0000)
+        {
+            _controlRegister.Value = data;
+        }
+        else if (address == 0x0001)
+        {
+            _maskRegister.Value = data;
+        }
+        else if (address == 0x0002)
+        {
+        }
+        else if (address == 0x0003)
+        {
+        }
+        else if (address == 0x0004)
+        {
+        }
+        else if (address == 0x0005)
+        {
+        }
+        else if (address == 0x0006)
+        {
+            _addressRegister.Update(data);
+        }
+        else if (address == 0x0007)
+        {
+            PpuWrite(_addressRegister, data);
+
+            _addressRegister.Increment(_controlRegister.IncrementMode);
+        }
+    }
+
+    private byte PpuRead(ushort address)
+    {
+        address &= 0x3FFF;
+
+        byte data = 0x00;
+
+        if (cartridge.PpuRead(address, ref data))
+        {
+        }
+        else if (address is >= 0x2000 and <= 0x3EFF)
+        {
+            data = _vRam.PpuRead(address);
+        }
+        else if (address is >= 0x3F00 and <= 0x3FFF)
+        {
+            address &= 0x001F;
+
+            if (address is 0x0010 or 0x0014 or 0x0018 or 0x001C)
+            {
+                address = 0x00;
+            }
+
+            data = _paletteTable[address];
+        }
+
+        return data;
+    }
+
+    private void PpuWrite(ushort address, byte data)
+    {
+        address &= 0x3FFF;
+
+        if (cartridge.PpuWrite(address, data))
+        {
+        }
+        else if (address is >= 0x2000 and <= 0x3EFF)
+        {
+            _vRam.PpuWrite(address, data);
+        }
+        else if (address is >= 0x3F00 and <= 0x3FFF)
+        {
+            address &= 0x001F;
+
+            if (address is 0x0010 or 0x0014 or 0x0018 or 0x001C)
+            {
+                address = 0x00;
+            }
+
+            _paletteTable[address] = data;
+        }
+    }
+
+    public void Reset()
+    {
+        _statusRegister.Value = 0;
+        _maskRegister.Value = 0;
+        _controlRegister.Value = 0;
+        _addressRegister.Value = 0;
+
+        _scanline = 0;
+        _cycles = 0;
+
+        _ppuDataBuffer = 0;
+    }
+
+    public void Clock()
+    {
+        _cycles++;
 
         if (_cycles >= 341)
         {
@@ -34,228 +192,23 @@ public class Ppu(Cartridge cartridge, Bus bus)
 
             if (_scanline == 241)
             {
-                _statusRegister.VerticalVBlanc(true);
-                _statusRegister.SpriteZeroHit(false);
+                _statusRegister.VerticalBlanc = true;
+                _statusRegister.SpriteZeroHit = false;
 
-                if (ControlRegister.GenerateVBlancNmi())
+                if (_controlRegister.EnableNmi)
                 {
-                    _nmiInterrupt = true;
+                    Nmi = true;
                 }
             }
 
             if (_scanline >= 262)
             {
                 _scanline = 0;
-                _nmiInterrupt = false;
+                Nmi = false;
 
-                _statusRegister.SpriteZeroHit(false);
-                _statusRegister.ResetVerticalVBlanc();
-
-                return true;
+                _statusRegister.SpriteZeroHit = false;
+                _statusRegister.VerticalBlanc = false;
             }
-        }
-
-        return false;
-    }
-
-    private void IncrementVRamAddress()
-    {
-        _addressRegister.Increment(ControlRegister.VRamAddressIncrement());
-    }
-
-    public bool PollNmiInterrupt()
-    {
-        return _nmiInterrupt;
-    }
-
-    public byte Read(ushort address)
-    {
-        if (address is < 0x2000 or > 0x3FFF) throw new Exception("ppu address out of range");
-
-        address = MirrorPpuAddress(address);
-
-        return address switch
-        {
-            0x2000 => 0,
-            0x2001 => 0,
-            0x2002 => ReadStatusRegister(),
-            0x2003 => 0,
-            0x2004 => 0,
-            0x2005 => 0,
-            0x2006 => 0,
-            0x2007 => ReadPpuBus(),
-            _ => throw new Exception("ppu address out of range")
-        };
-
-        byte ReadStatusRegister()
-        {
-            var status = _statusRegister.Get();
-
-            _statusRegister.ResetVerticalVBlanc();
-            _addressRegister.ResetLatch();
-            _scrollRegister.ResetLatch();
-
-            return status;
-        }
-
-        byte ReadPpuBus()
-        {
-            var registerAddress = _addressRegister.Address;
-            IncrementVRamAddress();
-
-            if (registerAddress < 0x2000) // read from chr rom
-            {
-                var data = _internalDataBuffer;
-                _internalDataBuffer = cartridge.ReadChrRom(registerAddress);
-                return data;
-            }
-
-            if (registerAddress is >= 0x2000 and < 0x3000) // read from vRam (name table)
-            {
-                var data = _internalDataBuffer;
-                var addr = VRam.MirrorVRamAddress(address);
-                _internalDataBuffer = VRam.Read(addr);
-                return data;
-            }
-
-            if (registerAddress is >= 0x3000 and < 0x3F00) // read from unused space
-            {
-                throw new Exception("attempt to read free space");
-            }
-
-            if (registerAddress is >= 0x3F00 and < 0x4000) // read from palette table
-            {
-                // add mirroring
-                // 0x3F00 - 0x3F1F
-                // 0x3F20 - 0x3F3F
-                // 0x3F40 - 0x3F5F
-                // ...
-                // 0x3FE0 - 0x3FFF
-
-                // $3F10/$3F14/$3F18/$3F1C are mirrors of
-                // $3F00/$3F04/$3F08/$3F0C
-                if (registerAddress is 0x3F10 or 0x3F14 or 0x3F18 or 0x3F1C)
-                    registerAddress -= 0x0010;
-
-                registerAddress &= 0b0011_1111_0001_1111; // 0x3F1F
-
-                return PaletteTable[registerAddress - 0x3F00];
-            }
-
-            throw new Exception("unexpected access to mirrored space");
-        }
-    }
-
-    private static ushort MirrorPpuAddress(ushort address)
-    {
-        // mirroring 0010 0000 0000 0111 = 0x2007
-        // 0x2000 - 0x2007
-        // 0x2008 - 0x200F
-        // 0x2010 - 0x2017
-        // 0x2018 - 0x201F
-        return (ushort)(address & 0b0010_0000_0000_0111);
-    }
-
-    public void Write(ushort address, byte data)
-    {
-        if (address is < 0x2000 or > 0x3FFF) throw new Exception("ppu address out of range");
-
-        address = MirrorPpuAddress(address);
-
-        switch (address)
-        {
-            case 0x2000:
-                WriteToPpuCtrl();
-                break;
-            case 0x2001:
-                WriteToPpuMask();
-                break;
-            case 0x2002:
-                break;
-            case 0x2003:
-                WriteToOamAddress();
-                break;
-            case 0x2004:
-                WriteToOamData();
-                break;
-            case 0x2005:
-                WriteToPpuScroll();
-                break;
-            case 0x2006:
-                WriteToPpuAddress();
-                break;
-            case 0x2007:
-                WriteToPpuBus();
-                break;
-        }
-
-        return;
-
-        void WriteToPpuCtrl()
-        {
-            var nmiStatus = ControlRegister.GenerateVBlancNmi();
-            ControlRegister.Update(data);
-
-            if (!nmiStatus && ControlRegister.GenerateVBlancNmi() && _statusRegister.IsInVBlanc())
-                _nmiInterrupt = true;
-        }
-
-        void WriteToPpuMask()
-        {
-            _maskRegister.Update(data);
-        }
-
-        void WriteToOamAddress()
-        {
-        }
-
-        void WriteToOamData()
-        {
-        }
-
-        void WriteToPpuScroll()
-        {
-            _scrollRegister.Write(data);
-        }
-
-        void WriteToPpuAddress()
-        {
-            _addressRegister.Update(data);
-        }
-
-        void WriteToPpuBus()
-        {
-            var addressRegister = _addressRegister.Address;
-
-            if (addressRegister < 0x2000) // write to chr rom
-            {
-                throw new Exception("attempt to write to chr rom");
-            }
-            else if (addressRegister is >= 0x2000 and < 0x3000) // write to vRam (name table)
-            {
-                VRam.Write(addressRegister, data);
-            }
-            else if (addressRegister is >= 0x3000 and < 0x3F00) // write to unused space
-            {
-                throw new Exception("attempt to write free space");
-            }
-            else if (addressRegister is >= 0x3F00 and < 0x4000) // write to palette
-            {
-                // $3F10/$3F14/$3F18/$3F1C are mirrors of
-                // $3F00/$3F04/$3F08/$3F0C
-                if (addressRegister is 0x3F10 or 0x3F14 or 0x3F18 or 0x3F1C)
-                    addressRegister -= 0x0010;
-
-                addressRegister &= 0b0011_1111_0001_1111; // 0x3F1F
-
-                PaletteTable[addressRegister - 0x3F00] = data;
-            }
-            else // write to outside boundary
-            {
-                throw new Exception("unexpected access to mirrored space");
-            }
-
-            IncrementVRamAddress();
         }
     }
 }
