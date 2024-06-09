@@ -4,21 +4,62 @@ namespace NesEmulator.Core.CartridgeModule;
 
 public class Cartridge(Header header, IMapper mapper, byte[] prgRom, byte[] chrRom)
 {
-    public Header Header { get; } = header;
-    public byte[] ChrRom { get; } = chrRom;
+    private Header Header { get; } = header;
     public Mirroring Mirroring => Header.Mirroring;
 
-    public byte ReadPrgRom(ushort address)
+    public bool CpuRead(ushort address, ref byte data)
     {
-        address = mapper.MapPrgRom(address);
+        ushort mappedAddress = 0x0000;
 
-        return prgRom[address];
+        if (mapper.CpuMapReadPrgRom(address, ref mappedAddress))
+        {
+            data = prgRom[mappedAddress];
+            return true;
+        }
+
+        return false;
     }
 
-    public byte ReadChrRom(ushort address)
+    public bool CpuWrite(ushort address, byte data)
     {
-        address = mapper.MapChrRom(address);
+        ushort mappedAddress = 0x0000;
 
-        return ChrRom[address];
+        if (mapper.CpuMapWritePrgRom(address, ref mappedAddress))
+        {
+            prgRom[mappedAddress] = data;
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool PpuRead(ushort address, ref byte data)
+    {
+        ushort mappedAddress = 0x0000;
+
+        if (mapper.PpuMapReadChrRom(address, ref mappedAddress))
+        {
+            data = chrRom[mappedAddress];
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool PpuWrite(ushort address, byte data)
+    {
+        ushort mappedAddress = 0x0000;
+
+        if (mapper.CpuMapWritePrgRom(address, ref mappedAddress))
+        {
+            chrRom[mappedAddress] = data;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void Reset()
+    {
     }
 }
