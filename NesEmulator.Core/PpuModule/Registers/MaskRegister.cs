@@ -2,7 +2,36 @@
 
 public class MaskRegister
 {
-    /*
+    public byte Value { get; set; }
+
+    public bool GrayScale => GetFlag(Flag.GrayScale);
+    public bool ShowBackgroundLeftMost8Pixels => GetFlag(Flag.ShowBackgroundLeft);
+    public bool ShowSpriteLeftMost8Pixels => GetFlag(Flag.ShowSpritesLeft);
+    public bool ShowBackground => GetFlag(Flag.ShowBackground);
+    public bool ShowSprites => GetFlag(Flag.ShowSprites);
+    public bool EmphasizeRed => GetFlag(Flag.EmphasizeRed);
+    public bool EmphasizeGreen => GetFlag(Flag.EmphasizeGreen);
+    public bool EmphasizeBlue => GetFlag(Flag.EmphasizeBlue);
+
+    public static implicit operator byte(MaskRegister maskRegister) => maskRegister.Value;
+
+    private bool GetFlag(Flag flag)
+        => (Value & (byte)flag) != 0;
+
+    private enum Flag
+    {
+        GrayScale = 0b0000_0001,
+        ShowBackgroundLeft = 0b0000_0010,
+        ShowSpritesLeft = 0b0000_0100,
+        ShowBackground = 0b0000_1000,
+        ShowSprites = 0b0001_0000,
+        EmphasizeRed = 0b0010_0000,
+        EmphasizeGreen = 0b0100_0000,
+        EmphasizeBlue = 0b1000_0000
+    }
+}
+
+/*
      7  bit  0
      ---- ----
      BGRs bMmG
@@ -15,50 +44,4 @@ public class MaskRegister
      ||+------- Emphasize red (green on PAL/Dendy)
      |+-------- Emphasize green (red on PAL/Dendy)
      +--------- Emphasize blue
-    */
-
-    private byte _maskRegister;
-
-    public void Update(byte maskRegister)
-        => _maskRegister = maskRegister;
-
-    public bool IsGrayScale()
-    {
-        return (_maskRegister & 0b0000_0001) != 0;
-    }
-
-    public bool ShowBackgroundLeftMost8Pixels()
-    {
-        return (_maskRegister & 0b0000_0010) != 0; 
-    }
-    
-    public bool ShowSpriteLeftMost8Pixels()
-    {
-        return (_maskRegister & 0b0000_0100) != 0; 
-    }
-    
-    public bool ShowBackground()
-    {
-        return (_maskRegister & 0b0000_1000) != 0; 
-    }
-    
-    public bool ShowSprites()
-    {
-        return (_maskRegister & 0b0001_0000) != 0; 
-    }
-    
-    public bool EmphasizeRed()
-    {
-        return (_maskRegister & 0b0010_0000) != 0; 
-    }
-    
-    public bool EmphasizeGreen()
-    {
-        return (_maskRegister & 0b0100_0000) != 0; 
-    }
-    
-    public bool EmphasizeBlue()
-    {
-        return (_maskRegister & 0b1000_0000) != 0; 
-    }
-}
+*/

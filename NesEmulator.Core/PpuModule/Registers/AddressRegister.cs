@@ -1,20 +1,25 @@
-﻿namespace NesEmulator.Core.PpuModule.Registers;
+﻿using System.Runtime.CompilerServices;
+
+namespace NesEmulator.Core.PpuModule.Registers;
 
 public class AddressRegister
 {
-    private byte _hiByte;
-    private byte _loByte;
     private bool _isHiByte = true;
 
-    public ushort Address
+    private byte _hiByte;
+    private byte _loByte;
+
+    public ushort Value
     {
         get => (ushort)((_hiByte << 8) | _loByte);
-        private set
+        set
         {
             _hiByte = (byte)(value >> 8);
-            _loByte = (byte)(value & 0xFF);
+            _loByte = (byte)(value & 0x00FF);
         }
     }
+
+    public static implicit operator ushort(AddressRegister addressRegister) => addressRegister.Value;
 
     public void Update(byte data)
     {
@@ -28,17 +33,13 @@ public class AddressRegister
                 break;
         }
 
-        // mirror ???
-        if (Address > 0x3FFF)
-        {
-            Address &= 0b0011_1111_1111_1111;
-        }
-
         _isHiByte = !_isHiByte;
     }
 
-    public void Increment(byte value)
+    public void Increment(bool incrementMode)
     {
+        var value = (byte)(incrementMode ? 32 : 1);
+
         var lo = _loByte + value;
 
         if (lo > 0xFF)
@@ -50,16 +51,8 @@ public class AddressRegister
         {
             _loByte += value;
         }
-
-        // mirror ???
-        if (Address > 0x3FFF)
-        {
-            Address &= 0b0011_1111_1111_1111;
-        }
     }
 
-    public void ResetLatch()
-    {
-        _isHiByte = true;
-    }
+
+    public void ResetLatch() => _isHiByte = true;
 }

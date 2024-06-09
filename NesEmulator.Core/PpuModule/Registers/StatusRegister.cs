@@ -2,7 +2,48 @@
 
 public class StatusRegister
 {
-    /*
+    public byte Value { get; set; }
+
+    public bool SpriteOverflow
+    {
+        get => GetFlag(Flag.SpriteOverflow);
+        set => SetFlag(Flag.SpriteOverflow, value);
+    }
+
+    public bool SpriteZeroHit
+    {
+        get => GetFlag(Flag.SpriteZeroHit);
+        set => SetFlag(Flag.SpriteZeroHit, value);
+    }
+
+    public bool VerticalBlanc
+    {
+        get => GetFlag(Flag.VerticalBlanc);
+        set => SetFlag(Flag.VerticalBlanc, value);
+    }
+
+    public void ResetVerticalBlanc() => VerticalBlanc = false;
+
+    public static implicit operator byte(StatusRegister statusRegister) => statusRegister.Value;
+
+    private bool GetFlag(Flag flag)
+        => (Value & (byte)flag) != 0;
+
+    private void SetFlag(Flag flag, bool value)
+    {
+        if (value) Value |= (byte)flag;
+        else Value &= (byte)~flag;
+    }
+
+    private enum Flag
+    {
+        SpriteOverflow = 0b0010_0000,
+        SpriteZeroHit = 0b0100_0000,
+        VerticalBlanc = 0b1000_0000
+    }
+}
+
+/*
      7  bit  0
      ---- ----
      VSO. ....
@@ -22,40 +63,4 @@ public class StatusRegister
                 Set at dot 1 of line 241 (the line *after* the post-render
                 line); cleared after reading $2002 and at dot 1 of the
                 pre-render line.
-    */
-
-    private byte _statusRegister;
-
-    public byte Get()
-        => _statusRegister;
-
-    // first 5bits unused
-
-    public void SetSpriteOverflow(bool value)
-    {
-        if (value) _statusRegister |= 0b0010_0000;
-        else _statusRegister &= 0b1101_1111;
-    }
-
-    public void SpriteZeroHit(bool value)
-    {
-        if (value) _statusRegister |= 0b0100_0000;
-        else _statusRegister &= 0b1011_1111;
-    }
-
-    public void VerticalVBlanc(bool value)
-    {
-        if (value) _statusRegister |= 0b1000_0000;
-        else _statusRegister &= 0b0111_1111;
-    }
-
-    public void ResetVerticalVBlanc()
-    {
-        VerticalVBlanc(false);
-    }
-
-    public bool IsInVBlanc()
-    {
-        return (_statusRegister & 0b1000_0000) != 0;
-    }
-}
+*/
