@@ -1,29 +1,29 @@
 ﻿using NesEmulator.Core.CartridgeModule;
 
-namespace NesEmulator.Core;
+namespace NesEmulator.Core.PpuModule;
 
 public class VRam(Mirroring mirroring)
 {
     private readonly byte[] _memory = new byte[2048];
 
-    public byte Read(ushort address)
+    public byte PpuRead(ushort address)
     {
-        // address = MirrorVRamAddress(address);
+        //address = MirrorVRamAddress(address);
 
         return _memory[address];
     }
 
-    public void Write(ushort address, byte data)
+    public void PpuWrite(ushort address, byte data)
     {
         address = MirrorVRamAddress(address);
 
         _memory[address] = data;
     }
 
-    public ushort MirrorVRamAddress(ushort address)
+    private ushort MirrorVRamAddress(ushort address)
     {
-        address &= 0b1011_1111_1111_1111;
-        
+        address &= 0b0010_1111_1111_1111;
+
         // address from 0x2000 to 0x2FFF 4kB
         address -= 0x2000; // 0x0000 - 0x0FFF
 
