@@ -63,7 +63,7 @@ public partial class GameViewer
         var cartridge = _bus.Cartridge;
 
         // draw background
-        var bank = ppu.ControlRegister.BackgroundPatternTableAddress();
+        var bank = ppu._controlRegister.PatternBackground ? 0x1000 : 0x0000;
 
         for (ushort i = 0; i < 0x3C0; i++)
         {
@@ -71,7 +71,7 @@ public partial class GameViewer
             var tileX = i % 32;
             var tileY = i / 32;
 
-            var tileData = cartridge.ChrRom.AsSpan().Slice((int)(bank + tile * 16), 16);
+            var tileData = cartridge.ChrRom.AsSpan().Slice(bank + tile * 16, 16);
             var palette = BackgroundPalette(ppu, tileX, tileY);
 
             for (var y = 0; y < 8; y++) // iterate through rows
@@ -148,10 +148,10 @@ public partial class GameViewer
 
         return
         [
-            ppu.PaletteTable[0],
-            ppu.PaletteTable[paletteStart],
-            ppu.PaletteTable[paletteStart + 1],
-            ppu.PaletteTable[paletteStart + 2]
+            ppu._paletteTable[0],
+            ppu._paletteTable[paletteStart],
+            ppu._paletteTable[paletteStart + 1],
+            ppu._paletteTable[paletteStart + 2]
         ];
     }
 
