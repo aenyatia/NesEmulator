@@ -12,7 +12,7 @@ public class Controller
         _buttonsState[(int)button] = state;
     }
 
-    public void Write(byte input)
+    public void CpuWrite(byte input)
     {
         _strobe = (input & 1) == 1;
         if (_strobe)
@@ -21,7 +21,7 @@ public class Controller
         }
     }
 
-    public byte Read()
+    public byte CpuRead()
     {
         if (_currentButtonIndex > 7) return 1;
 
